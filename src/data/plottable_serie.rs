@@ -1,3 +1,5 @@
+use super::filtered_serie::FilteredSerie;
+use super::filtering::Filter;
 use super::sample::key::SerieKey;
 use super::sample::Sample;
 use super::sample_serie::{SampleSerie, SampleSerieIterator};
@@ -9,7 +11,7 @@ type Point = (f32, f32);
 
 /// Define a plottable serie (legend associated with points)
 #[derive(Debug, Clone)]
-pub struct PlottableSeries<S, K>
+pub struct PlottableSerie<S, K>
 where
     S : Sample<K>,
     K : SerieKey
@@ -22,10 +24,10 @@ where
 }
 
 
-impl<S, K> PlottableSeries<S, K>
+impl<S, K> PlottableSerie<S, K>
 where
     S : Sample<K>,
-    K : SerieKey
+    K : SerieKey,
 {
     pub fn new(paths : Vec<String>, x_key : K, y_key : K, legend_key : K) -> Self {
         if legend_key.is_numeric() {
@@ -37,7 +39,7 @@ where
         if !y_key.is_numeric() {
             panic!("y_key must be a numeric key");
         }
-        PlottableSeries {
+        PlottableSerie {
             paths,
             x_key,
             y_key,
@@ -57,20 +59,11 @@ where
     pub fn get_legend_key(&self) -> &K {
         &self.legend_key
     }
-}
 
-
-impl<S, K> IntoIterator for PlottableSeries<S, K>
-where
-    S : Sample<K>,
-    K : SerieKey
-{
-    type Item = (String, Point);
-    type IntoIter = PlottableSerieIterator<S, K, SampleSerieIterator<S, K>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        let it = SampleSerie::new(self.paths).into_iter();
-        PlottableSerieIterator::new(it, self.x_key, self.y_key, self.legend_key)
+    pub fn into_iter_with_filter(self, filter : Filter<K>) -> FilteredSerie<S, K, PlottableSerieIterator<S, K, SampleSerieIterator<S, K>>> {
+        let sample_serie = SampleSerie::new(self.paths);
+        let plottable_serie_iterator = PlottableSerieIterator::new(sample_serie.into_iter(), self.x_key, self.y_key, self.legend_key);
+        FilteredSerie::new(plottable_serie_iterator, filter)
     }
 }
 

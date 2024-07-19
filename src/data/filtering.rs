@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 use super::sample::key::SerieKey;
 use super::sample::Sample;
@@ -34,6 +34,26 @@ impl<Key> Filter<Key>
 where 
     Key : SerieKey
 {
+    /// Create a new filter for number with an identity function (all values are accepted)
+    pub fn new_number_identity(key : Key) -> Self {
+        assert!(key.is_numeric());
+        Self {
+            key,
+            filter_number : Some(Box::new(|_| true)),
+            filter_str : None,
+        }
+    }
+
+    /// Create a new filter for str with an identity function (all values are accepted)
+    pub fn new_str_identity(key : Key) -> Self {
+        assert!(key.is_string());
+        Self {
+            key,
+            filter_number : None,
+            filter_str : Some(Box::new(|_| true)),
+        }
+    }
+
     pub fn new_number<F>(key : Key, filter_fn : F) -> Self
     where 
         F : Fn(f32) -> bool + 'static
@@ -68,6 +88,30 @@ where
 
     pub fn get_filter_str(&self) -> &Box<dyn Fn(&str) -> bool> {
         self.filter_str.as_ref().unwrap()
+    }
+
+    pub fn combine_ref(&mut self, other : Self) -> &Self {
+        if self.key != other.key {
+            panic!("Cannot combine filters with different keys");
+        }
+
+        self.filter_number = match (self.filter_number.take(), other.filter_number) {
+            (Some(f1), Some(f2)) => 
+                Some(Box::new(move |x| f1(x) && f2(x))),
+            (Some(_), None) => panic!("Cannot combine a numeric filter with a string filter"),
+            (None, Some(_)) => panic!("Cannot combine a numeric filter with a string filter"),
+            (None, None) => None,
+        };
+
+        self.filter_str = match (self.filter_str.take(), other.filter_str) {
+            (Some(f1), Some(f2)) => 
+                Some(Box::new(move |x| f1(x) && f2(x))),
+            (Some(_), None) => panic!("Cannot combine a numeric filter with a string filter"),
+            (None, Some(_)) => panic!("Cannot combine a numeric filter with a string filter"),
+            (None, None) => None,
+        };
+
+        self
     }
 
     /// Combine two filters
@@ -107,6 +151,15 @@ where
             let value = sample.get_string_value(&self.key);
             self.filter_str.as_ref().unwrap()(value.as_str())
         }
+    }
+}
+
+impl<Key> AddAssign for Filter<Key>
+where
+    Key : SerieKey
+{
+    fn add_assign(&mut self, other : Self) {
+        self.combine_ref(other);
     }
 }
 

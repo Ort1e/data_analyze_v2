@@ -68,7 +68,7 @@ where
     _key : std::marker::PhantomData<K>,
 }
 
-impl <S, K> SampleSerieIterator<S, K>
+impl <'a, S, K> SampleSerieIterator<S, K>
 where
     S : Sample<K>,
     K : SerieKey
@@ -95,7 +95,7 @@ where
     }
 }
 
-impl<S, K> Iterator for SampleSerieIterator<S, K>
+impl<'a, S, K> Iterator for SampleSerieIterator<S, K>
 where
     S : Sample<K>,
     K : SerieKey
