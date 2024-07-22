@@ -23,7 +23,7 @@ pub trait SerieKey : Eq + std::hash::Hash + Copy + Display + Ord + Send + Sync{
 /// use serde_derive::{Deserialize, Serialize};
 /// use std::fmt::{Display, Formatter};
 /// use plot_helper::generate_plot_key;
-/// use plot_helper::data::plottable::key::SerieKey;
+/// use plot_helper::data::sample::key::SerieKey;
 /// generate_plot_key!(
 ///     MultiLineQueryKey[
 ///         ParsingTime { "parsing time (s)", Numeric},

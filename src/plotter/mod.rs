@@ -7,4 +7,4 @@ pub mod line_plot;
 
 mod utils;
 mod layout;
-mod plot_data;
+pub mod plot_data;

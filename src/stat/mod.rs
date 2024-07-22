@@ -15,7 +15,7 @@ pub fn remove_outliers<X>(
 }
 
 /// use the inverted_cdf method to get the q1 and q3
-fn calculate_q1_q3<X>(data: &mut Vec<(X, f32)>) -> (f32, f32) {
+pub fn calculate_q1_q3<X>(data: &mut Vec<(X, f32)>) -> (f32, f32) {
     if data.len() == 0 {
         return (f32::NAN, f32::NAN);
     }
@@ -39,7 +39,7 @@ fn calculate_q1_q3<X>(data: &mut Vec<(X, f32)>) -> (f32, f32) {
 }
 
 
-fn calculate_bounds(q1_q3: &(f32, f32)) -> (f32, f32)
+pub fn calculate_bounds(q1_q3: &(f32, f32)) -> (f32, f32)
 {
     // Calculate the lower and upper bounds for outliers
     let iqr = q1_q3.1.clone() - q1_q3.0.clone();

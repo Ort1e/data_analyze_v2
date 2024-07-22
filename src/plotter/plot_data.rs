@@ -79,7 +79,7 @@ impl PlotData {
     }
 
     /// aggregate the data and combine the value with the same x value with a specified metric
-    fn apply_aggregator(self, aggregator : MetricName) -> Result<PlotData, Box<dyn std::error::Error>> {
+    pub fn apply_aggregator(self, aggregator : MetricName) -> Result<PlotData, Box<dyn std::error::Error>> {
         let mut aggregated_data = HashMap::new();
         for (key, mut serie) in self.data.into_iter() {
             serie.sort_by(|(x1, _), (x2, _)| x1.partial_cmp(x2).unwrap());

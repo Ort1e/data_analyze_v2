@@ -4,7 +4,7 @@ pub mod key;
 
 
 /// Define a sample linked to a key
-pub(crate) trait Sample<Key>
+pub trait Sample<Key>
     where 
         Self : Clone + Sized + Send + Sync,
         Key : SerieKey
