@@ -1,4 +1,4 @@
-use super::filtering::Filter;
+use super::filtering::Filters;
 use super::sample::key::SerieKey;
 use super::sample::Sample;
 
@@ -9,27 +9,62 @@ pub struct FilteredSerie<S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
+    It : Iterator<Item = S>
 {
     sample_serie : It,
-    filter : Filter<K>,
+    filters : Filters<K>,
     _sample : std::marker::PhantomData<S>,
 }
 
 impl<S, K, It> FilteredSerie<S, K, It>
 where
     S : Sample<K>,
-    K : SerieKey
+    K : SerieKey,
+    It : Iterator<Item = S>
 {
-    pub fn new(sample_serie : It, filter : Filter<K>) -> Self {
+    pub fn new(sample_serie : It, filters : Filters<K>) -> Self {
         FilteredSerie {
             sample_serie,
-            filter,
+            filters,
+            _sample : std::marker::PhantomData,
+        }
+    }
+
+    pub fn get_iter(&self) -> &It {
+        &self.sample_serie
+    }
+}
+
+impl<S, K, It> IntoIterator for FilteredSerie<S, K, It>
+where
+    S : Sample<K>,
+    K : SerieKey,
+    It : Iterator<Item = S>
+{
+    type Item = S;
+    type IntoIter = FilteredSerieIterator<S, K, It>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        FilteredSerieIterator {
+            sample_serie : self.sample_serie,
+            filters : self.filters,
             _sample : std::marker::PhantomData,
         }
     }
 }
 
-impl<S, K, It> Iterator for FilteredSerie<S, K, It>
+pub struct FilteredSerieIterator<S, K, It>
+where
+    S : Sample<K>,
+    K : SerieKey,
+    It : Iterator<Item = S>
+{
+    sample_serie : It,
+    filters : Filters<K>,
+    _sample : std::marker::PhantomData<S>,
+}
+
+impl<S, K, It> Iterator for FilteredSerieIterator<S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
@@ -41,7 +76,7 @@ where
         loop { // Skip samples that match the filter
             match self.sample_serie.next() {
                 Some(sample) => {
-                    if !self.filter.apply(&sample) {
+                    if !self.filters.apply(&sample) {
                         return Some(sample);
                     }
                 },

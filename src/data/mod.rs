@@ -1,5 +1,6 @@
-mod sample;
-mod plottable_serie;
-mod sample_serie;
-mod filtering;
-mod filtered_serie;
+pub mod sample;
+pub mod plottable_serie;
+pub mod sample_serie;
+pub mod filtering;
+pub mod filtered_serie;
+pub mod rangeable;

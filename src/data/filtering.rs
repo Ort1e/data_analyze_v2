@@ -5,8 +5,110 @@ use super::sample::key::SerieKey;
 use super::sample::Sample;
 
 
+/// Define a filter for a serie (with multiple keys)
+pub struct Filters<Key>
+where 
+    Key : SerieKey
+{
+    filters : Vec<Filter<Key>>,
+}
 
-/// Define a filter
+impl<Key> Debug for Filters<Key>
+where 
+    Key : SerieKey
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Filters({} filters)", self.filters.len())
+    }
+}
+
+impl<Key> From<Vec<Filter<Key>>> for Filters<Key>
+where 
+    Key : SerieKey
+{
+    fn from(filters : Vec<Filter<Key>>) -> Self {
+        Self::new(filters)
+    }
+}
+
+impl<Key> Filters<Key>
+where 
+    Key : SerieKey
+{
+    pub fn empty() -> Self {
+        Self {
+            filters : Vec::new(),
+        }
+    }
+
+    pub fn new(filters : Vec<Filter<Key>>) -> Self {
+        let mut self_ = Self::empty();
+        for filter in filters {
+            self_.add_filter(filter);
+        }
+
+        self_
+    }
+
+    pub fn add_filter(&mut self, filter : Filter<Key>) {
+        for f in self.filters.iter_mut() {
+            if f.get_key() == filter.get_key() {
+                *f += filter;
+                return;
+            }
+        }
+        
+        self.filters.push(filter);
+        
+    }
+
+    pub fn combine_ref(&mut self, other : Self) -> &Self {
+        for filter in other.filters {
+            self.add_filter(filter);
+        }
+        self
+    }
+
+    pub fn combine(mut self, other : Self) -> Self {
+        self.combine_ref(other);
+        self
+    }
+
+    pub fn apply<S>(&self, sample : &S) -> bool
+    where
+        S : Sample<Key>
+    {
+        self.filters.iter().all(|f| f.apply(sample))
+    }
+}
+
+
+impl<Key> AddAssign for Filters<Key>
+where
+    Key : SerieKey
+{
+    fn add_assign(&mut self, other : Self) {
+        self.combine_ref(other);
+    }
+}
+
+impl<Key> Add for Filters<Key>
+where
+    Key : SerieKey
+{
+    type Output = Self;
+
+    fn add(self, other : Self) -> Self {
+        self.combine(other)
+    }
+}
+
+
+
+// -----------------------------------------------------------------------------
+
+
+/// Define a filter for a particular key
 pub struct Filter<Key> 
 where 
     Key : SerieKey
@@ -36,7 +138,9 @@ where
 {
     /// Create a new filter for number with an identity function (all values are accepted)
     pub fn new_number_identity(key : Key) -> Self {
-        assert!(key.is_numeric());
+        if !key.is_numeric() {
+            panic!("Cannot create a numeric filter with a string key");
+        }
         Self {
             key,
             filter_number : Some(Box::new(|_| true)),
@@ -46,7 +150,9 @@ where
 
     /// Create a new filter for str with an identity function (all values are accepted)
     pub fn new_str_identity(key : Key) -> Self {
-        assert!(key.is_string());
+        if !key.is_string() {
+            panic!("Cannot create a string filter with a numeric key");
+        }
         Self {
             key,
             filter_number : None,
@@ -58,7 +164,9 @@ where
     where 
         F : Fn(f32) -> bool + 'static
     {
-        assert!(key.is_numeric());
+        if !key.is_numeric() {
+            panic!("Cannot create a numeric filter with a string key");
+        }
         Self {
             key,
             filter_number : Some(Box::new(filter_fn)),
@@ -70,7 +178,9 @@ where
     where 
         F : Fn(&str) -> bool + 'static
     {
-        assert!(key.is_string());
+        if !key.is_string() {
+            panic!("Cannot create a string filter with a numeric key");
+        }
         Self {
             key,
             filter_number : None,
