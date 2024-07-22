@@ -97,11 +97,12 @@ where
         // plot the data
         for (legend, points) in plot_data.into_iter() {
             // update the legend color
-            if !legend_to_color.contains_key(legend.to_string().as_str()) { 
-                legend_to_color.insert(legend.to_string(), CustomPalette::pick(legend_index));// loop over the palette
-                legend_index += 1;
-            }
-            let color = legend_to_color.get(legend.as_str()).unwrap();
+            let color = 
+                legend_to_color.entry(legend.to_string())
+                    .or_insert_with(|| { 
+                        legend_index += 1; 
+                        CustomPalette::pick(legend_index - 1) 
+                    });
        
             chart
                 .draw_series(

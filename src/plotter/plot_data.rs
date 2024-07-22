@@ -72,24 +72,23 @@ impl PlotData {
     /// aggregate the data and combine the value with the same x value with a specified metric
     pub fn apply_aggregator(self, aggregator : MetricName) -> Result<PlotData, Box<dyn std::error::Error>> {
         let mut aggregated_data = HashMap::new();
-        for (key, serie) in self.data.into_iter() {
-            let mut serie = serie.clone();
+        for (key, mut serie) in self.data.into_iter() {
             serie.sort_by(|(x1, _), (x2, _)| x1.partial_cmp(x2).unwrap());
             let mut aggregated_serie = Vec::new(); // new serie
             let mut current_x = f32::MIN; // current x value for the aggregation
             let mut current_y = Vec::new(); // all the y values for the current x value
-            for (x, y) in serie.iter() {
-                if *x == current_x { // if the x value is the same as the current one, add the y value to the current y values
-                    current_y.push(*y);
+            for (x, y) in serie.into_iter() {
+                if x == current_x { // if the x value is the same as the current one, add the y value to the current y values
+                    current_y.push(y);
                 } else { // if the x value is different, calculate the metrics and reset the current x and y values
                     if current_y.len() != 0 {
                         // calculate the metrics
                         let stats = StatsSerie::new(&current_y).get_stats(aggregator);
                         aggregated_serie.push((current_x, stats.value as f32));
                     }
-                    current_x = *x;
+                    current_x = x;
                     current_y = Vec::new();
-                    current_y.push(*y);
+                    current_y.push(y);
                 }
             }
             if current_y.len() != 0 {
