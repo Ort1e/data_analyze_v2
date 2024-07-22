@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ops::Range;
 use std::path::Path;
 
 
@@ -16,10 +15,9 @@ use crate::data::sample::Sample;
 use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE, ONE_FIG_SIZE};
 
 use super::layout::Layout;
+use super::plot_data::PlotData;
 use super::utils::{axe_number_formater, write_legend, CustomPalette};
 
-const RANGE_X : Range<f32> = 0.0..1.0;
-const RANGE_Y : Range<f32> = 0.0..1.0;
 
 /// plot the given data
 /// take a list of series to plot, to the format (x_serie_key, y_serie_key, filter)
@@ -34,7 +32,7 @@ pub fn scatter_plot<S, Key>(
 
     series : Vec<(Key, Key, Option<Vec<Filter<Key>>>)>,
     
-    //remove_outliers : Option<Vec<Key>>,
+    remove_outliers : Option<Vec<Key>>,
 ) -> Result<(), Box<dyn std::error::Error>> 
 where
     Key : SerieKey,
@@ -75,10 +73,11 @@ where
         
         // get the data
         let data_it = data.into_iter_with_filter((x_serie_key, y_serie_key), legend_serie_key.clone(), filters);
+        let plot_data = PlotData::from_it(data_it, None);
+
 
         // define the chart
-        let range_x = RANGE_X;
-        let range_y = RANGE_Y;
+        let (range_x, range_y) = plot_data.get_range();
 
         let caption = format!("{} per {}", y_serie_key.get_display_name(), x_serie_key.get_display_name());
         let mut chart = ChartBuilder::on(&root)
@@ -96,18 +95,17 @@ where
             .draw()?;
 
         // plot the data
-        for (legend, point) in data_it {
+        for (legend, points) in plot_data.into_iter() {
             // update the legend color
             if !legend_to_color.contains_key(legend.to_string().as_str()) { 
                 legend_to_color.insert(legend.to_string(), CustomPalette::pick(legend_index));// loop over the palette
                 legend_index += 1;
             }
             let color = legend_to_color.get(legend.as_str()).unwrap();
-            let serie = vec![point];
-            
+       
             chart
                 .draw_series(
-                    serie.iter()
+                    points.iter()
                         .map(|(x, y)| Circle::new((*x, *y), 2, color.filled())),
             )?;
         }
