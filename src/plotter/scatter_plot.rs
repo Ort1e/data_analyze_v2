@@ -32,7 +32,7 @@ pub fn scatter_plot<S, Key>(
 
     series : Vec<(Key, Key, Option<Vec<Filter<Key>>>)>,
     
-    remove_outliers : Option<Vec<Key>>,
+    remove_outlier : bool,
 ) -> Result<(), Box<dyn std::error::Error>> 
 where
     Key : SerieKey,
@@ -73,7 +73,7 @@ where
         
         // get the data
         let data_it = data.into_iter_with_filter((x_serie_key, y_serie_key), legend_serie_key.clone(), filters);
-        let plot_data = PlotData::from_it(data_it, None);
+        let plot_data = PlotData::from_it(data_it, None, remove_outlier);
 
 
         // define the chart

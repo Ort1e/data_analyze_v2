@@ -38,7 +38,7 @@ pub fn line_plot<S, Key>(
 
     series : Vec<(Key, Key, Option<Vec<Filter<Key>>>)>,
     
-    remove_outliers : Option<Vec<Key>>,
+    remove_outlier : bool,
     aggregation_metric : MetricName,
 ) -> Result<(), Box<dyn std::error::Error>> 
 where
@@ -80,7 +80,7 @@ where
         
         // get the data
         let data_it = data.into_iter_with_filter((x_serie_key, y_serie_key), legend_serie_key.clone(), filters);
-        let plot_data = PlotData::from_it(data_it, Some(aggregation_metric.clone()));
+        let plot_data = PlotData::from_it(data_it, Some(aggregation_metric.clone()), remove_outlier);
 
         // define the chart
         let (range_x, range_y) = plot_data.get_range();

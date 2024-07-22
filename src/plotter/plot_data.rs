@@ -4,6 +4,7 @@ use std::ops::Range;
 
 use crate::data::rangeable::Rangeable;
 use crate::stat::compression::compress_data_serie;
+use crate::stat::remove_outliers;
 use crate::stat::stats_serie::{MetricName, StatsSerie};
 
 
@@ -23,13 +24,21 @@ pub struct PlotData {
 }
 
 impl PlotData {
-    pub fn from_it<It>(mut data : It, aggregation_metric : Option<MetricName>) -> Self
+    /// create a new PlotData from an iterator of (String, Point) and a metric to aggregate the data
+    /// Also compress the data to accelerate the plotting
+    pub fn from_it<It>(mut data : It, aggregation_metric : Option<MetricName>, remove_outlier : bool) -> Self
     where
         It : Iterator<Item = (String, Point)> + Rangeable
     {
         let mut data_collected = HashMap::new();
-        while let Some((key, serie)) = data.next() {
-            data_collected.entry(key).or_insert_with(Vec::new).push(serie);
+        while let Some((key, point)) = data.next() {
+            data_collected.entry(key).or_insert_with(Vec::new).push(point);
+        }
+
+        if remove_outlier {
+            for (_, serie) in data_collected.iter_mut() {
+                *serie = remove_outliers(mem::take(serie));
+            }
         }
 
         let (mut x_range, y_range) = data.get_range().unwrap_or((0.0..1.0, 0.0..1.0));
@@ -70,7 +79,7 @@ impl PlotData {
     }
 
     /// aggregate the data and combine the value with the same x value with a specified metric
-    pub fn apply_aggregator(self, aggregator : MetricName) -> Result<PlotData, Box<dyn std::error::Error>> {
+    fn apply_aggregator(self, aggregator : MetricName) -> Result<PlotData, Box<dyn std::error::Error>> {
         let mut aggregated_data = HashMap::new();
         for (key, mut serie) in self.data.into_iter() {
             serie.sort_by(|(x1, _), (x2, _)| x1.partial_cmp(x2).unwrap());
