@@ -160,7 +160,7 @@ where
         }
     }
 
-    pub fn new_number<F>(key : Key, filter_fn : F) -> Self
+    pub fn new_number<F>(key : Key, filter_fn : &'static F) -> Self
     where 
         F : Fn(f32) -> bool + 'static
     {
@@ -174,7 +174,7 @@ where
         }
     }
 
-    pub fn new_str<F>(key : Key, filter_fn : F) -> Self
+    pub fn new_str<F>(key : Key, filter_fn : &'static F) -> Self
     where 
         F : Fn(&str) -> bool + 'static
     {
