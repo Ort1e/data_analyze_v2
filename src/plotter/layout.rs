@@ -1,4 +1,5 @@
 /// define a layout for the subplots
+#[derive(Debug, Clone)]
 pub struct Layout {
     pub height : usize,
     pub width : usize,
