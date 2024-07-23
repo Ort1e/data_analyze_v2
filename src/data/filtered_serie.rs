@@ -76,7 +76,7 @@ where
         loop { // Skip samples that match the filter
             match self.sample_serie.next() {
                 Some(sample) => {
-                    if !self.filters.apply(&sample) {
+                    if self.filters.apply(&sample) {
                         return Some(sample);
                     }
                 },
