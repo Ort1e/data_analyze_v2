@@ -37,7 +37,7 @@ where
         }
     }
 
-    pub fn into_iter_with_filter(&self, serie_keys : (K, K), legend_key : Option<K>, filters : Filters<K>) 
+    pub fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, K), legend_key : Option<K>, filters : &'a Filters<K>) 
         -> PlottableSerieIterator<S, K, FilteredSerieIterator<S, K, SampleSerieIterator<S, K>>>
     {
         if let Some(legend_key) = legend_key.as_ref() {

@@ -7,7 +7,7 @@ use plotters::drawing::IntoDrawingArea;
 use plotters::series::LineSeries;
 use plotters::style::{Color, IntoFont, Palette, PaletteColor, WHITE};
 
-use crate::data::filtering::Filter;
+use crate::data::filtering::Filters;
 use crate::data::plottable_serie::PlottableSerie;
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::Sample;
@@ -36,7 +36,7 @@ pub fn line_plot<S, Key>(
     save_path : &str,
     layout : &Layout,
 
-    series : Vec<(Key, Key, Option<Vec<Filter<Key>>>)>,
+    series : Vec<(Key, Key, Option<&Filters<Key>>)>,
     
     remove_outlier : bool,
     aggregation_metric : MetricName,
@@ -75,11 +75,14 @@ where
         )
     in series.into_iter().zip(child_drawing_areas.iter()).enumerate() {
         // aggregate the filter
-        let filters = filters.unwrap_or(Vec::new());
-        let filters = filters.into_iter().map(|f| f).collect::<Vec<Filter<Key>>>().into();
+        let empty_filter = Filters::empty();
         
         // get the data
-        let data_it = data.into_iter_with_filter((x_serie_key, y_serie_key), legend_serie_key.clone(), filters);
+        let data_it = data.into_iter_with_filter(
+            (x_serie_key, y_serie_key), 
+            legend_serie_key.clone(), 
+            filters.unwrap_or(&empty_filter)
+        );
         let plot_data = PlotData::from_it(data_it, Some(aggregation_metric.clone()), remove_outlier);
 
         // define the chart

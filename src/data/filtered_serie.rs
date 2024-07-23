@@ -5,24 +5,24 @@ use super::sample::Sample;
 
 /// represent a serie of Sample, linked to a sample and a key (filtered)
 #[derive(Debug)]
-pub struct FilteredSerie<S, K, It>
+pub struct FilteredSerie<'a, S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
     It : Iterator<Item = S>
 {
     sample_serie : It,
-    filters : Filters<K>,
+    filters : &'a Filters<K>,
     _sample : std::marker::PhantomData<S>,
 }
 
-impl<S, K, It> FilteredSerie<S, K, It>
+impl<'a, S, K, It> FilteredSerie<'a, S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
     It : Iterator<Item = S>
 {
-    pub fn new(sample_serie : It, filters : Filters<K>) -> Self {
+    pub fn new(sample_serie : It, filters : &'a Filters<K>) -> Self {
         FilteredSerie {
             sample_serie,
             filters,
@@ -35,14 +35,14 @@ where
     }
 }
 
-impl<S, K, It> IntoIterator for FilteredSerie<S, K, It>
+impl<'a, S, K, It> IntoIterator for FilteredSerie<'a, S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
     It : Iterator<Item = S>
 {
     type Item = S;
-    type IntoIter = FilteredSerieIterator<S, K, It>;
+    type IntoIter = FilteredSerieIterator<'a, S, K, It>;
 
     fn into_iter(self) -> Self::IntoIter {
         FilteredSerieIterator {
@@ -53,18 +53,18 @@ where
     }
 }
 
-pub struct FilteredSerieIterator<S, K, It>
+pub struct FilteredSerieIterator<'a, S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
     It : Iterator<Item = S>
 {
     sample_serie : It,
-    filters : Filters<K>,
+    filters : &'a Filters<K>,
     _sample : std::marker::PhantomData<S>,
 }
 
-impl<S, K, It> Iterator for FilteredSerieIterator<S, K, It>
+impl<'a, S, K, It> Iterator for FilteredSerieIterator<'a, S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,

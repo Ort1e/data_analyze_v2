@@ -13,6 +13,15 @@ where
     filters : Vec<Filter<Key>>,
 }
 
+impl<Key> Default for Filters<Key>
+where 
+    Key : SerieKey
+{
+    fn default() -> Self {
+        Self::empty()
+    }
+}
+
 impl<Key> Debug for Filters<Key>
 where 
     Key : SerieKey
