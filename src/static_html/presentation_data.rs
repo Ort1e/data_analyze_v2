@@ -423,6 +423,26 @@ impl Array {
         }
     }
 
+    pub fn new_from_sample<S>(samples : Vec<S>) -> Array 
+    where S : SerdeSerialize {
+        let mut header = Vec::new();
+        let mut data = Vec::new();
+        for sample in samples {
+            let sample : S = sample;
+            let sample : serde_json::Value = serde_json::from_str(&serde_json::to_string(&sample).unwrap()).unwrap();
+            if header.is_empty() {
+                header = sample.as_object().unwrap().keys().map(|s| s.to_string()).collect();
+            }
+            let row = sample.as_object().unwrap().values().map(|s| s.to_string()).collect();
+            data.push(row);
+        }
+        Array {
+            header,
+            data
+        }
+
+    }
+
     pub fn from_csv(path : &str) -> Array {
         let mut csv_reader = csv::ReaderBuilder::new().has_headers(false).from_path(path).unwrap();
         let mut header = Vec::new();
