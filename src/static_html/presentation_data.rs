@@ -433,7 +433,7 @@ impl Array {
             if header.is_empty() {
                 header = sample.as_object().unwrap().keys().map(|s| s.to_string()).collect();
             }
-            let row = sample.as_object().unwrap().values().map(|s| s.to_string()).collect();
+            let row = sample.as_object().unwrap().values().map(|s| s.to_string().replace("\"", "")).collect();
             data.push(row);
         }
         Array {
