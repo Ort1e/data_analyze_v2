@@ -1,4 +1,7 @@
+use std::collections::HashMap;
 use std::ops::Range;
+use crate::stat::stats_serie::StatsSerie;
+
 use super::filtered_serie::{FilteredSerie, FilteredSerieIterator};
 use super::filtering::Filters;
 use super::rangeable::Rangeable;
@@ -57,6 +60,61 @@ where
         let sample_serie = SampleSerie::new(self.paths.clone());
         let filtered_serie = FilteredSerie::new(sample_serie.into_iter(), filters);
         PlottableSerieIterator::new(filtered_serie.into_iter(), serie_keys, legend_key)
+    }
+
+    pub fn into_sample_iter(&self) -> SampleSerieIterator<S, K> {
+        SampleSerie::new(self.paths.clone()).into_iter()
+    }
+
+    /// Collect statistics for multiple series sorted by a the uniquee value of a specified key.
+    /// This function is optimized for speed but not for memory (O(n)).
+    /// Warning: Avoid calling this function multiple times with different metrics as it may be slow.
+    pub fn collect_stats_sorted_by_unique_values(
+        &self, 
+        stats_serie_keys : &Vec<K>, 
+        sort_value_key : &K
+    ) -> HashMap<String, HashMap<K, StatsSerie>> {
+        let mut serie_by_key : HashMap<K, HashMap<String, StatsSerie>>  = HashMap::new();
+
+        for key in stats_serie_keys {
+            if !key.is_numeric() {
+                panic!("stats serie key must be numeric");
+            }
+
+            let mut sorted_series: HashMap<String, Vec<f32>> = HashMap::new();
+            let iter = self.into_sample_iter();
+            
+            for sample in iter {
+                let key_value = sample.get_numeric_value(key);
+                let sort_value = if sort_value_key.is_numeric() {
+                    sample.get_numeric_value(sort_value_key).to_string()
+                } else {
+                    sample.get_string_value(sort_value_key)
+                };
+                let serie = sorted_series.entry(sort_value).or_insert(Vec::new());
+                serie.push(key_value);
+            }
+
+
+            let sorted_stated_serie = sorted_series.into_iter().map(|(key, serie)| {
+                let stats_serie = StatsSerie::new(&serie);
+                (key.clone(), stats_serie)
+            }).collect::<HashMap<String, StatsSerie>>();
+            serie_by_key.insert(*key, sorted_stated_serie);
+        }
+
+        let mut serie_by_sort = HashMap::new();
+
+        for (key, inner_map) in serie_by_key.into_iter() {
+            for (inner_key, inner_value) in inner_map.into_iter() {
+                serie_by_sort
+                    .entry(inner_key.clone())
+                    .or_insert_with(HashMap::new)
+                    .insert(key.clone(), inner_value.clone());
+            }
+        }
+
+        return serie_by_sort;
     }
 }
 
