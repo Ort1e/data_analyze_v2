@@ -349,7 +349,7 @@ impl Text {
 pub enum TextContent {
     Raw(String),
     Link(TextLink),
-    Collapsable(Collapsable<TextContent>)
+    Collapsable(Collapsable<Text>)
 }
 
 impl From<&str> for TextContent {
@@ -370,8 +370,8 @@ impl From<TextLink> for TextContent {
     }
 }
 
-impl From<Collapsable<TextContent>> for TextContent {
-    fn from(c : Collapsable<TextContent>) -> TextContent {
+impl From<Collapsable<Text>> for TextContent {
+    fn from(c : Collapsable<Text>) -> TextContent {
         TextContent::Collapsable(c)
     }
 }
