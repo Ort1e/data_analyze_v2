@@ -319,6 +319,12 @@ impl From<Vec<TextContent>> for Text {
     }
 }
 
+impl From<TextContent> for Text {
+    fn from(content : TextContent) -> Text {
+        Text(vec![content])
+    }
+}
+
 impl Text {
     pub fn save_to_file(&self, dir_path : &str, file_name : &str) -> Result<(), Box<dyn std::error::Error>> {
         let path = Path::new(dir_path).join(format!("{}.{}", file_name, TEXT_EXTENSION));
