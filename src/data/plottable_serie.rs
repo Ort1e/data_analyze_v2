@@ -2,6 +2,7 @@ use std::ops::Range;
 use super::filtered_serie::{FilteredSerie, FilteredSerieIterator};
 use super::filtering::Filters;
 use super::rangeable::Rangeable;
+use super::resetable::Resetable;
 use super::sample::key::SerieKey;
 use super::sample::Sample;
 use super::sample_serie::{SampleSerie, SampleSerieIterator};
@@ -180,5 +181,20 @@ where
             };
             (legend, (x, y))
         })
+    }
+}
+
+impl<S, K, It> Resetable for PlottableSerieIterator<S, K, It>
+where
+    S : Sample<K>,
+    K : SerieKey,
+    It : Iterator<Item = S> + Resetable
+{
+    fn reset(&mut self) {
+        self.iterator.reset();
+        self.x_min = None;
+        self.x_max = None;
+        self.y_min = None;
+        self.y_max = None;
     }
 }

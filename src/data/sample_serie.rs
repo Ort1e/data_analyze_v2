@@ -1,5 +1,6 @@
 use std::collections::VecDeque;
 
+use super::resetable::Resetable;
 use super::sample::key::SerieKey;
 use super::sample::Sample;
 
@@ -68,7 +69,7 @@ where
     _key : std::marker::PhantomData<K>,
 }
 
-impl <'a, S, K> SampleSerieIterator<S, K>
+impl <S, K> SampleSerieIterator<S, K>
 where
     S : Sample<K>,
     K : SerieKey
@@ -87,15 +88,20 @@ where
     pub fn nb_files(&self) -> usize {
         self.paths.len()
     }
+}
 
-    /// Reset the iterator
-    pub fn reset(&mut self) {
+impl<S, K> Resetable for SampleSerieIterator<S, K>
+where
+    S : Sample<K>,
+    K : SerieKey
+{
+    fn reset(&mut self) {
         self.next_index = 0;
         self.current_sample = VecDeque::new();
     }
 }
 
-impl<'a, S, K> Iterator for SampleSerieIterator<S, K>
+impl<S, K> Iterator for SampleSerieIterator<S, K>
 where
     S : Sample<K>,
     K : SerieKey

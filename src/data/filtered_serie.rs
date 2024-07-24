@@ -1,4 +1,5 @@
 use super::filtering::Filters;
+use super::resetable::Resetable;
 use super::sample::key::SerieKey;
 use super::sample::Sample;
 
@@ -53,6 +54,9 @@ where
     }
 }
 
+// -----------------------------------------------------------------------------
+
+/// An iterator over a serie of Sample (filtered)
 pub struct FilteredSerieIterator<'a, S, K, It>
 where
     S : Sample<K>,
@@ -86,4 +90,13 @@ where
     }
 }
 
-
+impl<'a, S, K, It> Resetable for FilteredSerieIterator<'a, S, K, It>
+where
+    S : Sample<K>,
+    K : SerieKey,
+    It : Iterator<Item = S> + Resetable
+{
+    fn reset(&mut self) {
+        self.sample_serie.reset();
+    }
+}
