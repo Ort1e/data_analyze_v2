@@ -120,12 +120,14 @@ where
 
             self.current_sample = sample;
             self.next_index += 1;
-               
-        }
 
-        // If we have a sample, we return the next point
-        let sample = self.current_sample.pop_front().expect("Error while reading sample");
-        
-        Some(sample)
+            self.next()
+               
+        }else {
+            // If we have a sample, we return the next point
+            let sample = self.current_sample.pop_front().expect("Error while reading sample");
+            
+            Some(sample)
+        }
     }
 }
