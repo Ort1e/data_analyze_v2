@@ -423,28 +423,21 @@ impl Array {
         }
     }
 
+    /// Create a new array from a list of samples (serialize the samples to csv)
     pub fn new_from_sample<S>(samples : Vec<S>) -> Array 
     where S : SerdeSerialize {
-        let mut header = Vec::new();
-        let mut data = Vec::new();
+        let mut writer = csv::Writer::from_writer(vec![]);
         for sample in samples {
-            let sample : S = sample;
-            let sample : serde_json::Value = serde_json::from_str(&serde_json::to_string(&sample).unwrap()).unwrap();
-            if header.is_empty() {
-                header = sample.as_object().unwrap().keys().map(|s| s.to_string()).collect();
-            }
-            let row = sample.as_object().unwrap().values().map(|s| s.to_string().replace("\"", "")).collect();
-            data.push(row);
-        }
-        Array {
-            header,
-            data
+            writer.serialize(sample).unwrap();
         }
 
+        let raw = String::from_utf8(writer.into_inner().unwrap()).unwrap();
+        Array::from_raw_csv(&raw)
     }
 
-    pub fn from_csv(path : &str) -> Array {
-        let mut csv_reader = csv::ReaderBuilder::new().has_headers(false).from_path(path).unwrap();
+    /// create a new array from a raw csv
+    pub fn from_raw_csv(raw : &str) -> Array {
+        let mut csv_reader = csv::ReaderBuilder::new().has_headers(false).from_reader(raw.as_bytes());
         let mut header = Vec::new();
         let mut data = Vec::new();
         for result in csv_reader.records() {
@@ -459,6 +452,12 @@ impl Array {
             header,
             data
         }
+    }
+
+    /// Create a new array from a csv file
+    pub fn from_csv(path : &str) -> Array {
+        let raw = fs::read_to_string(path).unwrap();
+        Array::from_raw_csv(&raw)
     }
 
     pub fn get_header(&self) -> &Vec<String> {
