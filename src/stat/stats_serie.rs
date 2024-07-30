@@ -18,6 +18,7 @@ impl StatsSerie {
         if serie.len() == 0 {
             stats.insert(MetricName::Mean, MetricValue::mean(f64::NAN));
             stats.insert(MetricName::Median, MetricValue::median(f64::NAN));
+            stats.insert(MetricName::Additive, MetricValue::additive(f64::NAN));
 
             return Self {
                 serie : serie.clone(),
@@ -26,14 +27,14 @@ impl StatsSerie {
         }
 
         #[cfg(not(feature = "parrallelize"))]
-        stats.insert(
-            MetricName::Mean, 
-            MetricValue::mean(serie.iter().map(|f| *f as f64).sum::<f64>() / serie.len() as f64)
-        );
+        let additive = serie.iter().map(|f| *f as f64).sum::<f64>();
+        
         #[cfg(feature = "parrallelize")]
+        let additive = serie.par_iter().map(|f| *f as f64).sum::<f64>();
+                
         stats.insert(
             MetricName::Mean, 
-            MetricValue::mean(serie.par_iter().map(|f| *f as f64).sum::<f64>() / serie.len() as f64)
+            MetricValue::mean(additive / serie.len() as f64)
         );
 
         let sorted_serie = {
@@ -46,6 +47,8 @@ impl StatsSerie {
         }else{
             stats.insert(MetricName::Median, MetricValue::median(sorted_serie[serie.len() / 2] as f64));
         }
+
+        stats.insert(MetricName::Additive, MetricValue::additive(additive));
 
         Self {
             serie : serie.clone(),
@@ -98,6 +101,13 @@ impl MetricValue {
             value,
         }
     }
+
+    pub fn additive(value : f64) -> Self {
+        Self {
+            name : MetricName::Additive,
+            value,
+        }
+    }
 }
 
 
@@ -105,6 +115,7 @@ impl MetricValue {
 pub enum MetricName {
     Mean,
     Median,
+    Additive,
 }
 
 impl Display for MetricName {
@@ -119,6 +130,7 @@ impl MetricName {
         match self {
             MetricName::Mean => "mean".to_string(),
             MetricName::Median => "median".to_string(),
+            MetricName::Additive => "additive".to_string(),
         }
     }
 }
