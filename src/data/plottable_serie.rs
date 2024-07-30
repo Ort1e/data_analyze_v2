@@ -71,50 +71,45 @@ where
     /// Warning: Avoid calling this function multiple times with different metrics as it may be slow.
     pub fn collect_stats_sorted_by_unique_values(
         &self, 
-        stats_serie_keys : &Vec<K>, 
-        sort_value_key : &K
+        stats_serie_keys: &Vec<K>, 
+        sort_value_key: &K
     ) -> HashMap<String, HashMap<K, StatsSerie>> {
-        let mut serie_by_key : HashMap<K, HashMap<String, StatsSerie>>  = HashMap::new();
+        let mut serie_by_sort: HashMap<String, HashMap<K, Vec<f32>>> = HashMap::new();
 
-        for key in stats_serie_keys {
-            if !key.is_numeric() {
-                panic!("stats serie key must be numeric");
-            }
+        // Iterate through the sample iterator
+        let iter = self.into_sample_iter();
+        for sample in iter {
+            // Determine the sort value for this sample
+            let sort_value = if sort_value_key.is_numeric() {
+                sample.get_numeric_value(sort_value_key).to_string()
+            } else {
+                sample.get_string_value(sort_value_key)
+            };
 
-            let mut sorted_series: HashMap<String, Vec<f32>> = HashMap::new();
-            let iter = self.into_sample_iter();
-            
-            for sample in iter {
+            // Obtain the hashmap corresponding to the sort value
+            let sort_entry = serie_by_sort.entry(sort_value).or_insert_with(HashMap::new);
+
+            // Iterate over each key in stats_serie_keys
+            for key in stats_serie_keys {
+                if !key.is_numeric() {
+                    panic!("stats serie key must be numeric");
+                }
+
+                // Get the numeric value for the current key
                 let key_value = sample.get_numeric_value(key);
-                let sort_value = if sort_value_key.is_numeric() {
-                    sample.get_numeric_value(sort_value_key).to_string()
-                } else {
-                    sample.get_string_value(sort_value_key)
-                };
-                let serie = sorted_series.entry(sort_value).or_insert(Vec::new());
-                serie.push(key_value);
-            }
-
-
-            let sorted_stated_serie = sorted_series.into_iter().map(|(key, serie)| {
-                let stats_serie = StatsSerie::new(&serie);
-                (key.clone(), stats_serie)
-            }).collect::<HashMap<String, StatsSerie>>();
-            serie_by_key.insert(*key, sorted_stated_serie);
-        }
-
-        let mut serie_by_sort = HashMap::new();
-
-        for (key, inner_map) in serie_by_key.into_iter() {
-            for (inner_key, inner_value) in inner_map.into_iter() {
-                serie_by_sort
-                    .entry(inner_key.clone())
-                    .or_insert_with(HashMap::new)
-                    .insert(key.clone(), inner_value.clone());
+                // Collect the values in a vector
+                sort_entry.entry(*key).or_insert_with(Vec::new).push(key_value);
             }
         }
 
-        return serie_by_sort;
+        // Transform buffered vectors into StatsSerie objects
+        serie_by_sort.into_iter().map(|(sort_key, key_values_map)| {
+            let stats_map = key_values_map.into_iter().map(|(key, values)| {
+                let stats_serie = StatsSerie::new(&values);
+                (key, stats_serie)
+            }).collect::<HashMap<K, StatsSerie>>();
+            (sort_key, stats_map)
+        }).collect()
     }
 }
 
