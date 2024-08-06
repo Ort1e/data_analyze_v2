@@ -9,8 +9,8 @@ use plotters::style::{Color, IntoFont, Palette, PaletteColor, WHITE};
 
 use crate::data::filtering::Filters;
 use crate::data::plottable_serie::FilePlottableSerie;
+use crate::data::sample::file_sample::FileSample;
 use crate::data::sample::key::SerieKey;
-use crate::data::sample::Sample;
 use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE, ONE_FIG_SIZE};
 use crate::stat::stats_serie::MetricName;
 
@@ -43,7 +43,7 @@ pub fn line_plot<S, Key>(
 ) -> Result<(), Box<dyn std::error::Error>> 
 where
     Key : SerieKey,
-    S : Sample<Key>
+    S : FileSample<Key>
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());

@@ -9,8 +9,8 @@ use super::resetable::Resetable;
 use super::sample::file_sample::FileSample;
 use super::sample::key::SerieKey;
 use super::sample::Sample;
-use super::sample_serie::file_sample_serie::FileSampleSerieIterator;
-use super::sample_serie::SampleSerie;
+use super::sample_serie::file_sample_serie::{FileSampleSerie, FileSampleSerieIterator};
+
 
 
 
@@ -59,13 +59,13 @@ where
         }
         
         
-        let sample_serie = SampleSerie::new(self.paths.clone());
+        let sample_serie = FileSampleSerie::new(self.paths.clone());
         let filtered_serie = FilteredSerie::new(sample_serie.into_iter(), filters);
         PlottableSerieIterator::new(filtered_serie.into_iter(), serie_keys, legend_key)
     }
 
     pub fn into_sample_iter(&self) -> FileSampleSerieIterator<S, K> {
-        SampleSerie::new(self.paths.clone()).into_iter()
+        FileSampleSerie::new(self.paths.clone()).into_iter()
     }
 
     /// Collect statistics for multiple series sorted by a the uniquee value of a specified key.
