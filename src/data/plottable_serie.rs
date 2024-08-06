@@ -6,9 +6,11 @@ use super::filtered_serie::{FilteredSerie, FilteredSerieIterator};
 use super::filtering::Filters;
 use super::rangeable::Rangeable;
 use super::resetable::Resetable;
+use super::sample::file_sample::FileSample;
 use super::sample::key::SerieKey;
 use super::sample::Sample;
-use super::sample_serie::{SampleSerie, SampleSerieIterator};
+use super::sample_serie::file_sample_serie::FileSampleSerieIterator;
+use super::sample_serie::SampleSerie;
 
 
 
@@ -17,9 +19,9 @@ type Point = (f32, f32);
 
 /// Define a plottable serie (legend associated with points)
 #[derive(Debug, Clone)]
-pub struct PlottableSerie<S, K>
+pub struct FilePlottableSerie<S, K>
 where
-    S : Sample<K>,
+    S : FileSample<K>,
     K : SerieKey
 {
     paths : Vec<String>,
@@ -28,13 +30,13 @@ where
 }
 
 
-impl<S, K> PlottableSerie<S, K>
+impl<S, K> FilePlottableSerie<S, K>
 where
-    S : Sample<K>,
+    S : FileSample<K>,
     K : SerieKey,
 {
     pub fn new(paths : Vec<String>) -> Self {
-        PlottableSerie {
+        FilePlottableSerie {
             paths,
             _key : std::marker::PhantomData,
             _sample : std::marker::PhantomData,
@@ -42,7 +44,7 @@ where
     }
 
     pub fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, K), legend_key : Option<K>, filters : &'a Filters<K>) 
-        -> PlottableSerieIterator<S, K, FilteredSerieIterator<S, K, SampleSerieIterator<S, K>>>
+        -> PlottableSerieIterator<S, K, FilteredSerieIterator<S, K, FileSampleSerieIterator<S, K>>>
     {
         if let Some(legend_key) = legend_key.as_ref() {
             if legend_key.is_numeric() {
@@ -62,7 +64,7 @@ where
         PlottableSerieIterator::new(filtered_serie.into_iter(), serie_keys, legend_key)
     }
 
-    pub fn into_sample_iter(&self) -> SampleSerieIterator<S, K> {
+    pub fn into_sample_iter(&self) -> FileSampleSerieIterator<S, K> {
         SampleSerie::new(self.paths.clone()).into_iter()
     }
 

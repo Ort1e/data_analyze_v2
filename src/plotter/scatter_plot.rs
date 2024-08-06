@@ -9,7 +9,7 @@ use plotters::element::Circle;
 use plotters::style::{Color, IntoFont, Palette, PaletteColor, WHITE};
 
 use crate::data::filtering::Filters;
-use crate::data::plottable_serie::PlottableSerie;
+use crate::data::plottable_serie::FilePlottableSerie;
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::Sample;
 use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE, ONE_FIG_SIZE};
@@ -25,7 +25,7 @@ use super::utils::{axe_number_formater, write_legend, CustomPalette};
 /// NOTE : the number of series to plot must be equal to the number of subplots
 /// NOTE : If remove_outliers is Some, the outliers will be removed from the data with the given key
 pub fn scatter_plot<S, Key>(
-    data : &PlottableSerie<S, Key>, 
+    data : &FilePlottableSerie<S, Key>, 
     legend_serie_key : Option<Key>,
     save_path : &str,
     layout : &Layout,

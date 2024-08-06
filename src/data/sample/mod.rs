@@ -1,7 +1,7 @@
 use key::SerieKey;
 
 pub mod key;
-
+pub mod file_sample;
 
 /// Define a sample linked to a key
 pub trait Sample<Key>
@@ -16,7 +16,6 @@ pub trait Sample<Key>
     /// Get the value of data (as string), associated to the given key
     fn get_string_value(&self, key : &Key) -> String;
 
-    /// Load a sample from a file path
-    fn new_from_file_path(file_path : &str) -> Result<Vec<Self>, Box<dyn std::error::Error>>;
+    
 
 }

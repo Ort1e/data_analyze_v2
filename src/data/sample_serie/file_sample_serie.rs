@@ -1,16 +1,16 @@
 use std::collections::VecDeque;
 
-use super::resetable::Resetable;
-use super::sample::key::SerieKey;
-use super::sample::Sample;
+use crate::data::resetable::Resetable;
+use crate::data::sample::file_sample::FileSample;
+use crate::data::sample::key::SerieKey;
 
 
 
 /// represent a serie of Sample, linked to a sample and a key
 #[derive(Debug, Clone)]
-pub struct SampleSerie<S, K>
+pub struct FileSampleSerie<S, K>
 where
-    S : Sample<K>,
+    S : FileSample<K>,
     K : SerieKey
 {
     paths : Vec<String>,
@@ -19,14 +19,14 @@ where
     _sample : std::marker::PhantomData<S>,
 }
 
-impl<S, K> SampleSerie<S, K>
+impl<S, K> FileSampleSerie<S, K>
 where
-    S : Sample<K>,
+    S : FileSample<K>,
     K : SerieKey
 {
     /// Create a new serie of Sample
     pub fn new(paths : Vec<String>) -> Self {
-        SampleSerie {
+        FileSampleSerie {
             paths,
             _key : std::marker::PhantomData,
             _sample : std::marker::PhantomData,
@@ -39,16 +39,16 @@ where
     }
 }
 
-impl<S, K> IntoIterator for SampleSerie<S, K>
+impl<S, K> IntoIterator for FileSampleSerie<S, K>
 where
-    S : Sample<K>,
+    S : FileSample<K>,
     K : SerieKey
 {
     type Item = S;
-    type IntoIter = SampleSerieIterator<S, K>;
+    type IntoIter = FileSampleSerieIterator<S, K>;
 
     fn into_iter(self) -> Self::IntoIter {
-        SampleSerieIterator::new(self.paths)
+        FileSampleSerieIterator::new(self.paths)
     }
 }
 
@@ -56,9 +56,9 @@ where
 
 /// An iterator over a serie of Sample
 #[derive(Debug, Clone)]
-pub struct SampleSerieIterator<S, K>
+pub struct FileSampleSerieIterator<S, K>
 where
-    S : Sample<K>,
+    S : FileSample<K>,
     K : SerieKey
 {
     paths : Vec<String>,
@@ -69,14 +69,14 @@ where
     _key : std::marker::PhantomData<K>,
 }
 
-impl <S, K> SampleSerieIterator<S, K>
+impl <S, K> FileSampleSerieIterator<S, K>
 where
-    S : Sample<K>,
+    S : FileSample<K>,
     K : SerieKey
 {
     /// Create a new iterator over a serie of Sample
     fn new(paths : Vec<String>) -> Self {
-        SampleSerieIterator {
+        FileSampleSerieIterator {
             paths,
             next_index : 0,
             current_sample : VecDeque::new(),
@@ -90,9 +90,9 @@ where
     }
 }
 
-impl<S, K> Resetable for SampleSerieIterator<S, K>
+impl<S, K> Resetable for FileSampleSerieIterator<S, K>
 where
-    S : Sample<K>,
+    S : FileSample<K>,
     K : SerieKey
 {
     fn reset(&mut self) {
@@ -101,9 +101,9 @@ where
     }
 }
 
-impl<S, K> Iterator for SampleSerieIterator<S, K>
+impl<S, K> Iterator for FileSampleSerieIterator<S, K>
 where
-    S : Sample<K>,
+    S : FileSample<K>,
     K : SerieKey
 {
     type Item = S;
