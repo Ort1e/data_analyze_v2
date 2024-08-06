@@ -17,35 +17,15 @@ use super::sample_serie::file_sample_serie::{FileSampleSerie, FileSampleSerieIte
 
 type Point = (f32, f32);
 
-/// Define a plottable serie (legend associated with points)
-#[derive(Debug, Clone)]
-pub struct FilePlottableSerie<S, K>
+/// Trait for a plottable serie
+pub trait PlottableSerie<S, K, It>
 where
-    S : FileSample<K>,
-    K : SerieKey
-{
-    paths : Vec<String>,
-    _key : std::marker::PhantomData<K>,
-    _sample : std::marker::PhantomData<S>,
-}
-
-
-impl<S, K> FilePlottableSerie<S, K>
-where
-    S : FileSample<K>,
+    S : Sample<K>,
     K : SerieKey,
+    It : Iterator<Item = S>
 {
-    pub fn new(paths : Vec<String>) -> Self {
-        FilePlottableSerie {
-            paths,
-            _key : std::marker::PhantomData,
-            _sample : std::marker::PhantomData,
-        }
-    }
-
-    pub fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, K), legend_key : Option<K>, filters : &'a Filters<K>) 
-        -> PlottableSerieIterator<S, K, FilteredSerieIterator<S, K, FileSampleSerieIterator<S, K>>>
-    {
+    fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, K), legend_key : Option<K>, filters : &'a Filters<K>) 
+    -> PlottableSerieIterator<S, K, FilteredSerieIterator<S, K, It>> {
         if let Some(legend_key) = legend_key.as_ref() {
             if legend_key.is_numeric() {
                 panic!("legend_key must be a string key");
@@ -59,19 +39,17 @@ where
         }
         
         
-        let sample_serie = FileSampleSerie::new(self.paths.clone());
-        let filtered_serie = FilteredSerie::new(sample_serie.into_iter(), filters);
+        let sample_serie = self.into_sample_iter();
+        let filtered_serie = FilteredSerie::new(sample_serie, filters);
         PlottableSerieIterator::new(filtered_serie.into_iter(), serie_keys, legend_key)
     }
 
-    pub fn into_sample_iter(&self) -> FileSampleSerieIterator<S, K> {
-        FileSampleSerie::new(self.paths.clone()).into_iter()
-    }
+    fn into_sample_iter(&self) -> It;
 
     /// Collect statistics for multiple series sorted by a the uniquee value of a specified key.
     /// This function is optimized for speed but not for memory (O(n)).
     /// Warning: Avoid calling this function multiple times with different metrics as it may be slow.
-    pub fn collect_stats_sorted_by_unique_values(
+    fn collect_stats_sorted_by_unique_values(
         &self, 
         stats_serie_keys: &Vec<K>, 
         sort_value_key: &K
@@ -112,6 +90,45 @@ where
             }).collect::<HashMap<K, StatsSerie>>();
             (sort_key, stats_map)
         }).collect()
+    }
+}
+
+
+
+/// Define a plottable serie (legend associated with points)
+#[derive(Debug, Clone)]
+pub struct FilePlottableSerie<S, K>
+where
+    S : FileSample<K>,
+    K : SerieKey
+{
+    paths : Vec<String>,
+    _key : std::marker::PhantomData<K>,
+    _sample : std::marker::PhantomData<S>,
+}
+
+
+impl<S, K> FilePlottableSerie<S, K>
+where
+    S : FileSample<K>,
+    K : SerieKey,
+{
+    pub fn new(paths : Vec<String>) -> Self {
+        FilePlottableSerie {
+            paths,
+            _key : std::marker::PhantomData,
+            _sample : std::marker::PhantomData,
+        }
+    }
+}
+
+impl<S, K> PlottableSerie<S, K, FileSampleSerieIterator<S, K>> for FilePlottableSerie<S, K> 
+where 
+    S : FileSample<K>,
+    K : SerieKey,
+{
+    fn into_sample_iter(&self) -> FileSampleSerieIterator<S, K> {
+        FileSampleSerie::new(self.paths.clone()).into_iter()
     }
 }
 

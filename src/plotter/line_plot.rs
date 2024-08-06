@@ -8,9 +8,9 @@ use plotters::series::LineSeries;
 use plotters::style::{Color, IntoFont, Palette, PaletteColor, WHITE};
 
 use crate::data::filtering::Filters;
-use crate::data::plottable_serie::FilePlottableSerie;
-use crate::data::sample::file_sample::FileSample;
+use crate::data::plottable_serie::PlottableSerie;
 use crate::data::sample::key::SerieKey;
+use crate::data::sample::Sample;
 use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE, ONE_FIG_SIZE};
 use crate::stat::stats_serie::MetricName;
 
@@ -30,8 +30,8 @@ use super::utils::{axe_number_formater, write_legend, CustomPalette};
 /// NOTE : the number of series to plot must be equal to the number of subplots
 /// NOTE : If remove_outliers is Some, the outliers will be removed from the data with the given key
 /// NOTE : The aggregation_metrics is the metric used to aggregate the data with the same x value
-pub fn line_plot<S, Key>(
-    data : &FilePlottableSerie<S, Key>, 
+pub fn line_plot<S, Key, It, Plot>(
+    data : &Plot, 
     legend_serie_key : Option<Key>,
     save_path : &str,
     layout : &Layout,
@@ -43,7 +43,9 @@ pub fn line_plot<S, Key>(
 ) -> Result<(), Box<dyn std::error::Error>> 
 where
     Key : SerieKey,
-    S : FileSample<Key>
+    S : Sample<Key>,
+    It : Iterator<Item = S>,
+    Plot : PlottableSerie<S, Key, It>
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());
