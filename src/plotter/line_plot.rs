@@ -8,7 +8,7 @@ use plotters::series::LineSeries;
 use plotters::style::{Color, IntoFont, Palette, PaletteColor, WHITE};
 
 use crate::data::filtering::Filters;
-use crate::data::plottable::PlottableSerie;
+use crate::data::plottable::Plottable;
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::Sample;
 use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE, ONE_FIG_SIZE};
@@ -45,7 +45,7 @@ where
     Key : SerieKey,
     S : Sample<Key>,
     It : Iterator<Item = S>,
-    Plot : PlottableSerie<S, Key, It>
+    Plot : Plottable<S, Key, It>
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());

@@ -11,19 +11,21 @@ use super::sample::key::SerieKey;
 use super::sample::Sample;
 
 pub mod file_plottable;
+#[cfg(feature = "sqlite")]
+pub mod sqlite_plottable;
 
 type Point = (f32, f32);
 
 
 /// Trait for a plottable serie
-pub trait PlottableSerie<S, K, It>
+pub trait Plottable<'selflt, S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
-    It : Iterator<Item = S>
+    It : Iterator<Item = S> + 'selflt
 {
     fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, K), legend_key : Option<K>, filters : &'a Filters<K>) 
-    -> PlottableSerieIterator<S, K, FilteredSerieIterator<S, K, It>> {
+    -> PlottableIterator<S, K, FilteredSerieIterator<S, K, It>> {
         if let Some(legend_key) = legend_key.as_ref() {
             if legend_key.is_numeric() {
                 panic!("legend_key must be a string key");
@@ -39,10 +41,10 @@ where
         
         let sample_serie = self.into_sample_iter();
         let filtered_serie = FilteredSerie::new(sample_serie, filters);
-        PlottableSerieIterator::new(filtered_serie.into_iter(), serie_keys, legend_key)
+        PlottableIterator::new(filtered_serie.into_iter(), serie_keys, legend_key)
     }
 
-    fn into_sample_iter(&self) -> It;
+    fn into_sample_iter(&'selflt self) -> It;
 
     /// Collect statistics for multiple series sorted by a the uniquee value of a specified key.
     /// This function is optimized for speed but not for memory (O(n)).
@@ -98,7 +100,7 @@ where
 /// Note: the iterator is not sorted
 /// Note: the iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
 #[derive(Debug, Clone)]
-pub struct PlottableSerieIterator<S, K, It>
+pub struct PlottableIterator<S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
@@ -113,7 +115,7 @@ where
     y_max : Option<f32>,
 }
 
-impl<S, K, It> PlottableSerieIterator<S, K, It>
+impl<S, K, It> PlottableIterator<S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
@@ -134,7 +136,7 @@ where
             panic!("y_key must be a numeric key");
         }
         
-        PlottableSerieIterator {
+        PlottableIterator {
             iterator,
             serie_keys,
             legend_key,
@@ -154,7 +156,7 @@ where
     }
 }
 
-impl<S, K, It> Rangeable for PlottableSerieIterator<S, K, It>
+impl<S, K, It> Rangeable for PlottableIterator<S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
@@ -189,7 +191,7 @@ where
     }
 }
 
-impl<S, K, It> Iterator for PlottableSerieIterator<S, K, It>
+impl<S, K, It> Iterator for PlottableIterator<S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
@@ -215,7 +217,7 @@ where
     }
 }
 
-impl<S, K, It> Resetable for PlottableSerieIterator<S, K, It>
+impl<S, K, It> Resetable for PlottableIterator<S, K, It>
 where
     S : Sample<K>,
     K : SerieKey,
