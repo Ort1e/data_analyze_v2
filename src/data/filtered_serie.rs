@@ -13,7 +13,7 @@ where
     It : Iterator<Item = S>
 {
     sample_serie : It,
-    filters : &'a Filters<K>,
+    filters : &'a Option<Filters<K>>,
     _sample : std::marker::PhantomData<S>,
 }
 
@@ -23,7 +23,7 @@ where
     K : SerieKey,
     It : Iterator<Item = S>
 {
-    pub fn new(sample_serie : It, filters : &'a Filters<K>) -> Self {
+    pub fn new(sample_serie : It, filters : &'a Option<Filters<K>>) -> Self {
         FilteredSerie {
             sample_serie,
             filters,
@@ -64,7 +64,7 @@ where
     It : Iterator<Item = S>
 {
     sample_serie : It,
-    filters : &'a Filters<K>,
+    filters : &'a Option<Filters<K>>,
     _sample : std::marker::PhantomData<S>,
 }
 
@@ -80,7 +80,7 @@ where
         loop { // Skip samples that match the filter
             match self.sample_serie.next() {
                 Some(sample) => {
-                    if self.filters.apply(&sample) {
+                    if self.filters.is_none() || self.filters.as_ref().unwrap().apply(&sample) {
                         return Some(sample);
                     }
                 },

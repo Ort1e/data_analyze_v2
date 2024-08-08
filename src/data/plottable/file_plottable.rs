@@ -31,12 +31,12 @@ where
     }
 }
 
-impl<'a, S, K> Plottable<'a, S, K, FileSampleSerieIterator<S, K>> for FilePlottable<S, K>
+impl<S, K> Plottable<'static, S, K, FileSampleSerieIterator<S, K>> for FilePlottable<S, K>
 where
-    S: FileSample<K>,
-    K: SerieKey,
+    S: FileSample<K> + 'static,
+    K: SerieKey + 'static,
 {
-    fn into_sample_iter(&'a self) -> FileSampleSerieIterator<S, K> {
+    fn into_sample_iter<'a>(&'a self) -> FileSampleSerieIterator<S, K> where 'a : 'static {
         FileSampleSerie::new(self.paths.clone()).into_iter()
     }
 }

@@ -53,13 +53,17 @@ where
     pub fn new(filters : Vec<Filter<Key>>) -> Self {
         let mut self_ = Self::empty();
         for filter in filters {
-            self_.add_filter(filter);
+            self_.add_filter(Some(filter));
         }
 
         self_
     }
 
-    pub fn add_filter(&mut self, filter : Filter<Key>) {
+    pub fn add_filter(&mut self, filter : Option<Filter<Key>>) {
+        if filter.is_none() {
+            return;
+        }
+        let filter = filter.unwrap();
         for f in self.filters.iter_mut() {
             if f.get_key() == filter.get_key() {
                 *f += filter;
@@ -73,7 +77,7 @@ where
 
     pub fn combine_ref(&mut self, other : Self) -> &Self {
         for filter in other.filters {
-            self.add_filter(filter);
+            self.add_filter(Some(filter));
         }
         self
     }

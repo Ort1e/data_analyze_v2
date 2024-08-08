@@ -39,12 +39,12 @@ where
     }
 }
 
-impl<'a, S, K> Plottable<'a, S, K, SqliteSampleSerieIterator<'a, S, K>> for SqlitePlottable<S, K> 
+impl<'it_lt, S, K> Plottable<'it_lt, S, K,  SqliteSampleSerieIterator<'it_lt, S, K>> for SqlitePlottable<S, K> 
 where 
-    S : SqliteSample<K>,
-    K : SerieKey,
+    S : SqliteSample<K> + 'it_lt,
+    K : SerieKey +'it_lt,
 {
-    fn into_sample_iter(&'a self) -> SqliteSampleSerieIterator<'a, S, K> {
+    fn into_sample_iter<'a>(&'a self) -> SqliteSampleSerieIterator<'it_lt, S, K> where 'a : 'it_lt {
         SqliteSampleSerieIterator::new(&self.conn, &self.query).into_iter()
     }
 }
