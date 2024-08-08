@@ -1,21 +1,19 @@
 use std::collections::HashMap;
 use std::ops::Range;
+
 use crate::stat::stats_serie::StatsSerie;
 
 use super::filtered_serie::{FilteredSerie, FilteredSerieIterator};
 use super::filtering::Filters;
 use super::rangeable::Rangeable;
 use super::resetable::Resetable;
-use super::sample::file_sample::FileSample;
 use super::sample::key::SerieKey;
 use super::sample::Sample;
-use super::sample_serie::file_sample_serie::{FileSampleSerie, FileSampleSerieIterator};
 
-
-
-
+pub mod file_plottable;
 
 type Point = (f32, f32);
+
 
 /// Trait for a plottable serie
 pub trait PlottableSerie<S, K, It>
@@ -90,45 +88,6 @@ where
             }).collect::<HashMap<K, StatsSerie>>();
             (sort_key, stats_map)
         }).collect()
-    }
-}
-
-
-
-/// Define a plottable serie (legend associated with points)
-#[derive(Debug, Clone)]
-pub struct FilePlottableSerie<S, K>
-where
-    S : FileSample<K>,
-    K : SerieKey
-{
-    paths : Vec<String>,
-    _key : std::marker::PhantomData<K>,
-    _sample : std::marker::PhantomData<S>,
-}
-
-
-impl<S, K> FilePlottableSerie<S, K>
-where
-    S : FileSample<K>,
-    K : SerieKey,
-{
-    pub fn new(paths : Vec<String>) -> Self {
-        FilePlottableSerie {
-            paths,
-            _key : std::marker::PhantomData,
-            _sample : std::marker::PhantomData,
-        }
-    }
-}
-
-impl<S, K> PlottableSerie<S, K, FileSampleSerieIterator<S, K>> for FilePlottableSerie<S, K> 
-where 
-    S : FileSample<K>,
-    K : SerieKey,
-{
-    fn into_sample_iter(&self) -> FileSampleSerieIterator<S, K> {
-        FileSampleSerie::new(self.paths.clone()).into_iter()
     }
 }
 

@@ -9,7 +9,7 @@ use plotters::element::Circle;
 use plotters::style::{Color, IntoFont, Palette, PaletteColor, WHITE};
 
 use crate::data::filtering::Filters;
-use crate::data::plottable_serie::PlottableSerie;
+use crate::data::plottable::PlottableSerie;
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::Sample;
 use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE, ONE_FIG_SIZE};
