@@ -27,7 +27,7 @@ where
 
     fn into_sample_iter<'a>(&'a self) -> It where 'a : 'it_lt;
 
-    fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, K), legend_key : Option<K>, filters : &'a Option<Filters<K>>) 
+    fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, K), legend_key : Option<K>, filters : Option<&'a Filters<K>>) 
     -> PlottableIterator<S, K, FilteredSerieIterator<S, K, It>> where 'a : 'it_lt {
         if let Some(legend_key) = legend_key.as_ref() {
             if legend_key.is_numeric() {

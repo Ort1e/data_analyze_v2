@@ -30,7 +30,7 @@ pub fn scatter_plot<'it_lt, 'plot_lt, S, Key, It, Plot>(
     save_path : &str,
     layout : &Layout,
 
-    series : Vec<(Key, Key, &'plot_lt Option<Filters<Key>>)>,
+    series : Vec<(Key, Key, Option<&'plot_lt Filters<Key>>)>,
     
     remove_outlier : bool,
 ) -> Result<(), Box<dyn std::error::Error>> 

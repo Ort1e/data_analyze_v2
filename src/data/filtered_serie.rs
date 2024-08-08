@@ -13,7 +13,7 @@ where
     It : Iterator<Item = S>
 {
     sample_serie : It,
-    filters : &'a Option<Filters<K>>,
+    filters : Option<&'a Filters<K>>,
     _sample : std::marker::PhantomData<S>,
 }
 
@@ -23,7 +23,7 @@ where
     K : SerieKey,
     It : Iterator<Item = S>
 {
-    pub fn new(sample_serie : It, filters : &'a Option<Filters<K>>) -> Self {
+    pub fn new(sample_serie : It, filters : Option<&'a Filters<K>>) -> Self {
         FilteredSerie {
             sample_serie,
             filters,
@@ -64,7 +64,7 @@ where
     It : Iterator<Item = S>
 {
     sample_serie : It,
-    filters : &'a Option<Filters<K>>,
+    filters : Option<&'a Filters<K>>,
     _sample : std::marker::PhantomData<S>,
 }
 
