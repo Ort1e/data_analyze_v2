@@ -27,7 +27,10 @@ where
 
     fn into_sample_iter<'a>(&'a self) -> It where 'a : 'it_lt;
 
-    fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, K), legend_key : Option<K>, filters : Option<&'a Filters<K>>) 
+    /// Create an iterator over the plottable serie
+    /// The iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
+    /// If the y_key is None, the iterator will return (x_key, 1) to allow aggregation
+    fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, Option<K>), legend_key : Option<K>, filters : Option<&'a Filters<K>>) 
     -> PlottableIterator<S, K, FilteredSerieIterator<S, K, It>> where 'a : 'it_lt {
         if let Some(legend_key) = legend_key.as_ref() {
             if legend_key.is_numeric() {
@@ -37,7 +40,7 @@ where
         if !serie_keys.0.is_numeric() {
             panic!("x_key must be a numeric key");
         }
-        if !serie_keys.1.is_numeric() {
+        if serie_keys.1.is_some() && !serie_keys.1.unwrap().is_numeric() {
             panic!("y_key must be a numeric key");
         }
         
@@ -108,7 +111,7 @@ where
     It : Iterator<Item = S>
 {
     iterator : It,
-    serie_keys : (K, K),
+    serie_keys : (K, Option<K>),
     legend_key : Option<K>,
     x_min : Option<f32>,
     x_max : Option<f32>,
@@ -122,7 +125,7 @@ where
     K : SerieKey,
     It : Iterator<Item = S>
 {
-    pub fn new(iterator : It, serie_keys : (K, K), legend_key : Option<K>) -> Self {
+    pub fn new(iterator : It, serie_keys : (K, Option<K>), legend_key : Option<K>) -> Self {
         if let Some(legend_key) = legend_key.as_ref() {
             if legend_key.is_numeric() {
                 panic!("legend_key must be a string key");
@@ -133,7 +136,7 @@ where
             panic!("x_key must be a numeric key");
         }
 
-        if !serie_keys.1.is_numeric() {
+        if serie_keys.1.is_some() && !serie_keys.1.unwrap().is_numeric() {
             panic!("y_key must be a numeric key");
         }
         
@@ -148,7 +151,7 @@ where
         }
     }
 
-    pub fn get_serie_keys(&self) -> (K, K) {
+    pub fn get_serie_keys(&self) -> (K, Option<K>) {
         self.serie_keys
     }
 
@@ -203,7 +206,11 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.iterator.next().map(|sample| {
             let x = sample.get_numeric_value(&self.serie_keys.0);
-            let y = sample.get_numeric_value(&self.serie_keys.1);
+            let y = if let Some(y_key) = self.serie_keys.1.as_ref() {
+                sample.get_numeric_value(y_key)
+            } else {
+                1.0
+            };
             
             self.add_point(x, y);
             

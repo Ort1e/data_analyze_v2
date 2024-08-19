@@ -30,7 +30,7 @@ pub fn scatter_plot<'it_lt, 'plot_lt, S, Key, It, Plot>(
     save_path : &str,
     layout : &Layout,
 
-    series : Vec<(Key, Key, Option<&'plot_lt Filters<Key>>)>,
+    series : Vec<(Key, Option<Key>, Option<&'plot_lt Filters<Key>>)>,
     
     remove_outlier : bool,
 ) -> Result<(), Box<dyn std::error::Error>> 
@@ -70,6 +70,12 @@ where
             (x_serie_key, y_serie_key, filters), root)
         )
     in series.into_iter().zip(child_drawing_areas.iter()).enumerate() {
+
+        let y_series_name = if let Some(y_serie_key) = y_serie_key.as_ref() {
+            y_serie_key.get_display_name()
+        } else {
+            "count".to_string()
+        };
        
         // get the data
         let data_it = data.into_iter_with_filter(
@@ -83,7 +89,7 @@ where
         // define the chart
         let (range_x, range_y) = plot_data.get_range();
 
-        let caption = format!("{} per {}", y_serie_key.get_display_name(), x_serie_key.get_display_name());
+        let caption = format!("{} per {}", y_series_name, x_serie_key.get_display_name());
         let mut chart = ChartBuilder::on(&root)
             .caption(caption.as_str(), ("sans-serif", FIGURE_CAPTION_FONT_SIZE).into_font())
             .margin(5)
@@ -93,7 +99,7 @@ where
 
         chart.configure_mesh()
             .x_desc(x_serie_key.get_display_name().as_str())
-            .y_desc(y_serie_key.get_display_name().as_str())
+            .y_desc(y_series_name)
             .x_label_formatter(&axe_number_formater)
             .y_label_formatter(&axe_number_formater)
             .draw()?;

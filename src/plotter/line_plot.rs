@@ -36,7 +36,7 @@ pub fn line_plot<'it_lt, 'plot_lt, S, Key, It, Plot>(
     save_path : &str,
     layout : &Layout,
 
-    series : Vec<(Key, Key, Option<&'plot_lt Filters<Key>>)>,
+    series : Vec<(Key, Option<Key>, Option<&'plot_lt Filters<Key>>)>,
     
     remove_outlier : bool,
     aggregation_metric : MetricName,
@@ -89,7 +89,13 @@ where
         // define the chart
         let (range_x, range_y) = plot_data.get_range();
 
-        let caption = format!("{} per {}", y_serie_key.get_display_name(), x_serie_key.get_display_name());
+        let y_serie_name = if let Some(y_serie_key) = y_serie_key {
+            y_serie_key.get_display_name()
+        } else {
+            "count".to_string()
+        };
+
+        let caption = format!("{} per {}", y_serie_name, x_serie_key.get_display_name());
         let mut chart = ChartBuilder::on(&root)
             .caption(caption.as_str(), ("sans-serif", FIGURE_CAPTION_FONT_SIZE).into_font())
             .margin(5)
@@ -99,7 +105,7 @@ where
 
         chart.configure_mesh()
             .x_desc(x_serie_key.get_display_name().as_str())
-            .y_desc(y_serie_key.get_display_name().as_str())
+            .y_desc(y_serie_name.as_str())
             .x_label_formatter(&axe_number_formater)
             .y_label_formatter(&axe_number_formater)
             .draw()?;
