@@ -35,6 +35,10 @@ where
             _sample : std::marker::PhantomData,
         }
     }
+
+    pub fn get_connection(&self) -> &Connection {
+        &self.conn
+    }
 }
 
 impl<'it_lt, S, K> Plottable<'it_lt, S, K,  SqliteSampleSerieIterator<'it_lt, S, K>> for SqlitePlottable<S, K> 
