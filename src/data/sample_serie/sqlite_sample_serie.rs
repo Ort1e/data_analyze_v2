@@ -31,6 +31,10 @@ where
             _sample : std::marker::PhantomData,
         }
     }
+
+    pub fn get_connection(&self) -> &'a Connection {
+        self.conn
+    }
 }
 
 impl<'a, S, K> IntoIterator for SqliteSampleSerie<'a, S, K>
