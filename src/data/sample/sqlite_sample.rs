@@ -22,4 +22,7 @@ where
     /// let value = row.read::<i64, _>(0);
     /// ```
     fn new_from_row(row : &Statement) -> Result<Vec<Self>, Box<dyn std::error::Error>>;
+    
+    /// Get the select query to get the samples from the database
+    fn get_sqlite_select_query() -> &'static str;
 }

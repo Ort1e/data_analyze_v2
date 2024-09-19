@@ -13,7 +13,6 @@ where
     K : SerieKey
 {
     conn : &'a Connection,
-    query : String,
 
     _key : std::marker::PhantomData<K>,
     _sample : std::marker::PhantomData<S>,
@@ -25,10 +24,9 @@ where
     K : SerieKey
 {
     /// Create a new serie of Sample
-    pub fn new(conn : &'a Connection, query : &str) -> Self {
+    pub fn new(conn : &'a Connection) -> Self {
         SqliteSampleSerie {
             conn,
-            query : query.to_string(),
             _key : std::marker::PhantomData,
             _sample : std::marker::PhantomData,
         }
@@ -44,7 +42,7 @@ where
     type IntoIter = SqliteSampleSerieIterator<'a, S, K>;
 
     fn into_iter(self) -> Self::IntoIter {
-        SqliteSampleSerieIterator::new(self.conn, &self.query)
+        SqliteSampleSerieIterator::new(self.conn)
     }
 }
 
@@ -69,7 +67,8 @@ where
     K : SerieKey
 {
     /// Create a new iterator over a serie of Sample
-    pub fn new(conn : &'a Connection, query : &str) -> Self {
+    pub fn new(conn : &'a Connection) -> Self {
+        let query = S::get_sqlite_select_query();
         let stmt = conn.prepare(query).expect("Error while preparing statement");
 
 

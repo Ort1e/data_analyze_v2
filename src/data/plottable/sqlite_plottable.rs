@@ -18,7 +18,6 @@ where
     K : SerieKey
 {
     conn : Connection,
-    query : String,
     _key : std::marker::PhantomData<K>,
     _sample : std::marker::PhantomData<S>,
 }
@@ -29,10 +28,9 @@ where
     S : SqliteSample<K>,
     K : SerieKey,
 {
-    pub fn new(conn : Connection, query : &str) -> Self {
+    pub fn new(conn : Connection) -> Self {
         SqlitePlottable {
             conn,
-            query : query.to_string(),
             _key : std::marker::PhantomData,
             _sample : std::marker::PhantomData,
         }
@@ -45,7 +43,7 @@ where
     K : SerieKey +'it_lt,
 {
     fn into_sample_iter<'a>(&'a self) -> SqliteSampleSerieIterator<'it_lt, S, K> where 'a : 'it_lt {
-        SqliteSampleSerieIterator::new(&self.conn, &self.query).into_iter()
+        SqliteSampleSerieIterator::new(&self.conn).into_iter()
     }
 }
 
