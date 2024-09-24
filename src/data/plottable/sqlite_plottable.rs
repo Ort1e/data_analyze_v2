@@ -12,25 +12,30 @@ use super::Plottable;
 
 
 /// Define a plottable serie (legend associated with points)
-pub struct SqlitePlottable<S, K>
+pub struct SqlitePlottable<S, K, Sub>
 where
-    S : SqliteSample<K>,
+    S : SqliteSample<K, Sub>,
     K : SerieKey
 {
     conn : Connection,
+    sub : Sub,
     _key : std::marker::PhantomData<K>,
     _sample : std::marker::PhantomData<S>,
 }
 
 
-impl<S, K> SqlitePlottable<S, K>
+impl<S, K, Sub> SqlitePlottable<S, K, Sub>
 where
-    S : SqliteSample<K>,
+    S : SqliteSample<K, Sub>,
     K : SerieKey,
-{
-    pub fn new(conn : Connection) -> Self {
+{   
+    /// Create a new plottable serie
+    /// -args: conn: the connection to the database
+    /// -args: sub: the arg to pass to the construction of the query
+    pub fn new(conn : Connection, sub : Sub) -> Self {
         SqlitePlottable {
             conn,
+            sub,
             _key : std::marker::PhantomData,
             _sample : std::marker::PhantomData,
         }
@@ -41,13 +46,14 @@ where
     }
 }
 
-impl<'it_lt, S, K> Plottable<'it_lt, S, K,  SqliteSampleSerieIterator<'it_lt, S, K>> for SqlitePlottable<S, K> 
+impl<'it_lt, S, K, Sub> Plottable<'it_lt, S, K,  SqliteSampleSerieIterator<'it_lt, S, K, Sub>> for SqlitePlottable<S, K, Sub> 
 where 
-    S : SqliteSample<K> + 'it_lt,
+    Sub : 'it_lt,
+    S : SqliteSample<K, Sub> + 'it_lt,
     K : SerieKey +'it_lt,
 {
-    fn into_sample_iter<'a>(&'a self) -> SqliteSampleSerieIterator<'it_lt, S, K> where 'a : 'it_lt {
-        SqliteSampleSerieIterator::new(&self.conn).into_iter()
+    fn into_sample_iter<'a>(&'a self) -> SqliteSampleSerieIterator<'it_lt, S, K, Sub> where 'a : 'it_lt {
+        SqliteSampleSerieIterator::new(&self.conn, &self.sub).into_iter()
     }
 }
 
