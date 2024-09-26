@@ -210,7 +210,8 @@ pub enum Content {
 impl Content {
     /// Create a new image with the path on the file system
     pub fn new_image(path : &str) -> Content {
-        Content::Image(path.to_string())
+        let absolute_path = Path::new(path).canonicalize().unwrap();
+        Content::Image(absolute_path.to_str().unwrap().to_string())
     }
 
     /// Create a new content from a path
@@ -220,14 +221,13 @@ impl Content {
             let extension = path_o.extension();
             if let Some(extension) = extension {
                 let extension = extension.to_str().unwrap();
-                let absolute_path_o = fs::canonicalize(path_o)?;
-                let absolute_path = absolute_path_o.to_str().unwrap();
+                let path = path_o.to_str().unwrap();
                 match extension {
-                    "csv" =>                   Ok(Array::from_csv(absolute_path).into()),
-                    "png" | "jpg" | "jpeg" =>  Ok(Content::new_image(absolute_path)),
-                    COLLAPSABLE_EXTENSION =>   Ok(Collapsable::load_from_file(absolute_path)?.into()),
-                    TEXT_EXTENSION =>          Ok(Text::load_from_file(absolute_path)?.into()),
-                    _ =>                       Err(format!("the extension {} is not supported for the file {}", extension, absolute_path).into())
+                    "csv" =>                   Ok(Array::from_csv(path).into()),
+                    "png" | "jpg" | "jpeg" =>  Ok(Content::new_image(path)),
+                    COLLAPSABLE_EXTENSION =>   Ok(Collapsable::load_from_file(path)?.into()),
+                    TEXT_EXTENSION =>          Ok(Text::load_from_file(path)?.into()),
+                    _ =>                       Err(format!("the extension {} is not supported for the file {}", extension, path).into())
                 }
             } else {
                 let content : Content = serde_json::from_str(&fs::read_to_string(path)?)?;
@@ -393,8 +393,9 @@ pub struct TextLink {
 
 impl TextLink {
     pub fn new(href : String, text : String) -> TextLink {
+        let absolute_path = Path::new(&href).canonicalize().unwrap();
         TextLink {
-            href,
+            href : absolute_path.to_str().unwrap().to_string(),
             text
         }
     }

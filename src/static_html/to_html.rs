@@ -162,7 +162,10 @@ impl ToHtmlDepth for TextContent {
 
 impl ToHtmlDepth for TextLink {
     fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
-        format!("<a href=\"{}\">{}</a>", &self.href, &self.text).to_html(output_path, depth)
+        let relative_path_o = Path::new(&self.href).strip_prefix(&output_path).unwrap();
+        let relative_path = relative_path_o.to_str().unwrap();
+
+        format!("<a href=\"{}\">{}</a>", relative_path, &self.text).to_html(output_path, depth)
     }
 }
 
