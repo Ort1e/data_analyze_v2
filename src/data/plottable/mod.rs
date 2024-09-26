@@ -16,7 +16,7 @@ type Point = (f32, f32);
 /// Trait for a plottable serie
 pub trait Plottable<S, K>
 where
-    for<'a> &'a Self: IntoIterator<Item = S>, // &'a Self must be an iterator over S
+    for<'a> &'a Self: IntoIterator<Item = S>, // &'a Self must be an IntoIterator over S
     S : Sample<K>,
     K : SerieKey
 {

@@ -1,13 +1,16 @@
+use crate::data::plottable::Plottable;
 use crate::data::resetable::Resetable;
 use crate::data::sample::file_sample::FileSample;
 use crate::data::sample::key::SerieKey;
-use crate::data::sample::sqlite_sample::SqliteSample;
+
 use crate::data::sample::Sample;
 
 use super::file_sample_serie::FileSampleSerie;
 
 #[cfg(feature = "sqlite")]
 use super::sqlite_sample_serie::SqliteSampleSerie;
+#[cfg(feature = "sqlite")]
+use crate::data::sample::sqlite_sample::SqliteSample;
 
 
 
@@ -54,6 +57,12 @@ where
         MemorySampleSerieIntoIterator::new(&self.samples)
     }
 }
+
+impl<S, K> Plottable<S, K> for MemorySampleSerie<S, K>
+where
+    S : Sample<K>,
+    K : SerieKey
+{}
 
 // ----------------------------------- FROM ------------------------------------------
 
