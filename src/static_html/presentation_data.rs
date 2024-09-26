@@ -36,9 +36,9 @@ impl Default for Ir {
 
 impl Ir {
     /// convert the intermediate representation to html
-    pub fn to_html(&self) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn to_html<P : AsRef<Path>>(&self, output_path : P) -> Result<String, Box<dyn std::error::Error>> {
         let mut html_template = HTML_TEMPLATE.to_string();
-        let html_content = self.elements.to_html(1);
+        let html_content = self.elements.to_html(output_path, 1);
         let table_of_content = self.elements.get_table_of_content(1);
         html_template = html_template.replace("<!--table of contents-->", &table_of_content);
         html_template = html_template.replace("<!--contents-->", &html_content);
@@ -220,12 +220,14 @@ impl Content {
             let extension = path_o.extension();
             if let Some(extension) = extension {
                 let extension = extension.to_str().unwrap();
+                let absolute_path_o = fs::canonicalize(path_o)?;
+                let absolute_path = absolute_path_o.to_str().unwrap();
                 match extension {
-                    "csv" =>                   Ok(Array::from_csv(path).into()),
-                    "png" | "jpg" | "jpeg" =>  Ok(Content::new_image(path)),
-                    COLLAPSABLE_EXTENSION =>   Ok(Collapsable::load_from_file(path)?.into()),
-                    TEXT_EXTENSION =>          Ok(Text::load_from_file(path)?.into()),
-                    _ =>                       Err(format!("the extension {} is not supported for the file {}", extension, path).into())
+                    "csv" =>                   Ok(Array::from_csv(absolute_path).into()),
+                    "png" | "jpg" | "jpeg" =>  Ok(Content::new_image(absolute_path)),
+                    COLLAPSABLE_EXTENSION =>   Ok(Collapsable::load_from_file(absolute_path)?.into()),
+                    TEXT_EXTENSION =>          Ok(Text::load_from_file(absolute_path)?.into()),
+                    _ =>                       Err(format!("the extension {} is not supported for the file {}", extension, absolute_path).into())
                 }
             } else {
                 let content : Content = serde_json::from_str(&fs::read_to_string(path)?)?;

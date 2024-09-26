@@ -1,9 +1,15 @@
+use std::fs;
+
 use plot_helper::static_html::presentation_data::{Array, Content, Element, Ir, ListElement};
 
 
 
 const IR_VALID_PATH: &'static str = "tests/ressources/presentation/testIrValid";
 const IR_INVALID_PATH: &'static str = "tests/ressources/presentation/testIrInvalid";
+
+fn get_cannonical_path(path : &str) -> String {
+    fs::canonicalize(path).unwrap().to_str().unwrap().to_string()
+}
 
 fn get_ref_ir() -> Ir {
     let list : ListElement = vec![
@@ -18,11 +24,11 @@ fn get_ref_ir() -> Ir {
                         ]
                     )
                 ).into(),
-                Content::Image(format!("{}/test1/img3.png", IR_VALID_PATH)).into(),
+                Content::Image(format!("{}/test1/img3.png", get_cannonical_path(IR_VALID_PATH))).into(),
                 Element::new(
                     "test1.1".to_string(),
                     vec![
-                        Content::Image(format!("{}/test1/test1.1/img1.png", IR_VALID_PATH)).into(),
+                        Content::Image(format!("{}/test1/test1.1/img1.png", get_cannonical_path(IR_VALID_PATH))).into(),
                     ]
                 ).into(),
             ]
@@ -30,7 +36,7 @@ fn get_ref_ir() -> Ir {
         Element::new(
             "test2".to_string(),
             vec![
-                Content::Image(format!("{}/test2/img2.png", IR_VALID_PATH)).into(),
+                Content::Image(format!("{}/test2/img2.png", get_cannonical_path(IR_VALID_PATH))).into(),
             ]
         ),
     ].into();
@@ -45,8 +51,14 @@ fn ir_build_valid_test(){
     assert!(ir.is_ok());
     let ir = ir.unwrap();
     assert_eq!(ir, get_ref_ir());
-    let html = ir.to_html();
+    let ir_path = get_cannonical_path(IR_VALID_PATH);
+    let html = ir.to_html(&ir_path);
     assert!(html.is_ok());
+    let html = html.unwrap();
+
+    // verify that the path of the IR isn't in the html
+    assert!(!html.contains(&ir_path));
+
 }
 
 #[test]

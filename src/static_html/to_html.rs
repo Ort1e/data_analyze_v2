@@ -1,5 +1,6 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::path::Path;
 
 use serde::Serialize;
 
@@ -19,11 +20,13 @@ fn format_title(title : &str) -> String {
 
 /// This trait is used to convert the data to html
 pub trait ToHtmlDepth {
-    fn to_html(&self, depth : usize) -> String;
+    /// convert the data to html
+    /// WARN : the output path is used to get the relative path of the images (must be absolute)
+    fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String;
 }
 
 impl ToHtmlDepth for String {
-    fn to_html(&self, _depth : usize) -> String {
+    fn to_html<P : AsRef<Path>>(&self, _output_path : P, _depth : usize) -> String {
         self.clone()
     }
 }
@@ -34,8 +37,8 @@ pub trait ToTableOfContent {
 }
 
 impl ToHtmlDepth for ListElement {
-    fn to_html(&self, depth : usize) -> String {
-        let result = self.elements.iter().map(|e| e.to_html(depth)).collect::<Vec<String>>().join("\n");
+    fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
+        let result = self.elements.iter().map(|e| e.to_html(output_path.as_ref(), depth)).collect::<Vec<String>>().join("\n");
         result
     }
 }
@@ -59,12 +62,12 @@ impl ToTableOfContent for ListElement {
 }
 
 impl ToHtmlDepth for Element {
-    fn to_html(&self, depth : usize) -> String {
+    fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
         let hash = calculate_hash(&self).to_string();
         let mut result = String::new();
         result.push_str(&format!("<h{} id=\"{}\">{}</h{}>", depth, hash, format_title(&self.title), depth));
         for e in self.content.iter() {
-            result.push_str(&e.to_html(depth + 1));
+            result.push_str(&e.to_html(output_path.as_ref(), depth + 1));
         }
         result
     }
@@ -91,10 +94,10 @@ impl ToTableOfContent for Element {
 }
 
 impl ToHtmlDepth for ContentElement {
-    fn to_html(&self, depth : usize) -> String {
+    fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
         match self {
-            ContentElement::Content(c) => c.to_html(depth),
-            ContentElement::Element(e) => e.to_html(depth),
+            ContentElement::Content(c) => c.to_html(output_path, depth),
+            ContentElement::Element(e) => e.to_html(output_path, depth),
         }
     }
 }
@@ -109,25 +112,26 @@ impl ToTableOfContent for ContentElement {
 }
 
 impl ToHtmlDepth for Content {
-    fn to_html(&self, depth : usize) -> String {
+    fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
         match self {
-            Content::Text(t) => t.to_html(depth),
+            Content::Text(t) => t.to_html(output_path, depth),
             Content::Image(s) => {
-                format!("<img src=\"{}\"/>", s).to_html(depth)
+                let relative_path = Path::new(s).strip_prefix(&output_path).unwrap();
+                format!("<img src=\"{}\"/>", relative_path.to_str().unwrap()).to_html(output_path, depth)
             },
-            Content::Array(a) => a.to_html(depth),
-            Content::Collapsable(e) => e.to_html(depth),
+            Content::Array(a) => a.to_html(output_path, depth),
+            Content::Collapsable(e) => e.to_html(output_path, depth),
         }
     }
 }
 
 impl<T> ToHtmlDepth for Collapsable<T> 
 where T: ToHtmlDepth + Serialize {
-    fn to_html(&self, depth : usize) -> String {
+    fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
         let mut result = String::new();
         result.push_str(&format!("<details><summary>{}</summary>", &self.summary));
         for e in self.content.iter() {
-            result.push_str(&e.to_html(depth));
+            result.push_str(&e.to_html(output_path.as_ref(), depth));
         }
         result.push_str("</details>");
         result
@@ -135,10 +139,10 @@ where T: ToHtmlDepth + Serialize {
 }
 
 impl ToHtmlDepth for Text {
-    fn to_html(&self, depth : usize) -> String {
+    fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
         let mut result = String::new();
         for e in self.get_content().iter() {
-            result.push_str(&e.to_html(depth));
+            result.push_str(&e.to_html(output_path.as_ref(), depth));
         }
         result = result.replace("\n", "<br>");
         result
@@ -146,25 +150,25 @@ impl ToHtmlDepth for Text {
 }
 
 impl ToHtmlDepth for TextContent {
-    fn to_html(&self, depth : usize) -> String {
+    fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
         match self {
-            TextContent::Raw(s) => s.to_html(depth),
-            TextContent::Link(l) => l.to_html(depth),
-            TextContent::Collapsable(c) => c.to_html(depth),
+            TextContent::Raw(s) => s.to_html(output_path, depth),
+            TextContent::Link(l) => l.to_html(output_path, depth),
+            TextContent::Collapsable(c) => c.to_html(output_path, depth),
         }
     }
 }
 
 
 impl ToHtmlDepth for TextLink {
-    fn to_html(&self, depth : usize) -> String {
-        format!("<a href=\"{}\">{}</a>", &self.href, &self.text).to_html(depth)
+    fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
+        format!("<a href=\"{}\">{}</a>", &self.href, &self.text).to_html(output_path, depth)
     }
 }
 
 
 impl ToHtmlDepth for Array {
-    fn to_html(&self, _depth : usize) -> String {
+    fn to_html<P : AsRef<Path>>(&self, _output_path : P, _depth : usize) -> String {
         let mut result = String::new();
         result.push_str("<table class=\"custom-table\">");
         result.push_str("<thead>");
