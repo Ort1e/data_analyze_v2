@@ -1,6 +1,6 @@
 use crate::data::sample::file_sample::FileSample;
 use crate::data::sample::key::SerieKey;
-use crate::data::sample_serie::file_sample_serie::{FileSampleSerie, FileSampleSerieIterator};
+use crate::data::sample_serie::file_sample_serie::{FileSampleSerie, FileSampleSerieIntoIterator};
 
 use super::Plottable;
 
@@ -31,12 +31,12 @@ where
     }
 }
 
-impl<'it_lt, S, K> Plottable<'it_lt, S, K, FileSampleSerieIterator<S, K>> for FilePlottable<S, K>
+impl<'it_lt, S, K> Plottable<'it_lt, S, K, FileSampleSerieIntoIterator<S, K>> for FilePlottable<S, K>
 where
     S: FileSample<K> + 'it_lt,
     K: SerieKey + 'it_lt,
 {
-    fn into_sample_iter<'a>(&'a self) -> FileSampleSerieIterator<S, K> where 'a : 'it_lt {
+    fn into_sample_iter<'a>(&'a self) -> FileSampleSerieIntoIterator<S, K> where 'a : 'it_lt {
         FileSampleSerie::new(self.paths.clone()).into_iter()
     }
 }

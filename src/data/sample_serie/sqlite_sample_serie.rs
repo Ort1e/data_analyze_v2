@@ -47,17 +47,17 @@ where
     K : SerieKey
 {
     type Item = S;
-    type IntoIter = SqliteSampleSerieIterator<'a, S, K, Sub>;
+    type IntoIter = SqliteSampleSerieIntoIterator<'a, S, K, Sub>;
 
     fn into_iter(self) -> Self::IntoIter {
-        SqliteSampleSerieIterator::new(self.conn, &self.sub)
+        SqliteSampleSerieIntoIterator::new(self.conn, &self.sub)
     }
 }
 
 // -----------------------------------------------------------------------------
 
 /// An iterator over a serie of Sample
-pub struct SqliteSampleSerieIterator<'a, S, K, Sub>
+pub struct SqliteSampleSerieIntoIterator<'a, S, K, Sub>
 where
     S : SqliteSample<K, Sub>,
     K : SerieKey
@@ -70,7 +70,7 @@ where
     _sub : std::marker::PhantomData<Sub>,
 }
 
-impl <'a, S, K, Sub> SqliteSampleSerieIterator<'a, S, K, Sub>
+impl <'a, S, K, Sub> SqliteSampleSerieIntoIterator<'a, S, K, Sub>
 where
     S : SqliteSample<K, Sub>,
     K : SerieKey
@@ -82,7 +82,7 @@ where
         let stmt = conn.prepare(query).expect("Error while preparing statement");
 
 
-        SqliteSampleSerieIterator {
+        SqliteSampleSerieIntoIterator {
             stmt,
             current_sample : VecDeque::new(),
             _key : std::marker::PhantomData,
@@ -91,7 +91,7 @@ where
     }
 }
 
-impl<'a, S, K, Sub> Iterator for SqliteSampleSerieIterator<'a, S, K, Sub>
+impl<'a, S, K, Sub> Iterator for SqliteSampleSerieIntoIterator<'a, S, K, Sub>
 where
     S : SqliteSample<K, Sub>,
     K : SerieKey

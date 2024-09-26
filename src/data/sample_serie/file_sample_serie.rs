@@ -45,10 +45,10 @@ where
     K : SerieKey
 {
     type Item = S;
-    type IntoIter = FileSampleSerieIterator<S, K>;
+    type IntoIter = FileSampleSerieIntoIterator<S, K>;
 
     fn into_iter(self) -> Self::IntoIter {
-        FileSampleSerieIterator::new(self.paths)
+        FileSampleSerieIntoIterator::new(self.paths)
     }
 }
 
@@ -56,7 +56,7 @@ where
 
 /// An iterator over a serie of Sample
 #[derive(Debug, Clone)]
-pub struct FileSampleSerieIterator<S, K>
+pub struct FileSampleSerieIntoIterator<S, K>
 where
     S : FileSample<K>,
     K : SerieKey
@@ -69,14 +69,14 @@ where
     _key : std::marker::PhantomData<K>,
 }
 
-impl <S, K> FileSampleSerieIterator<S, K>
+impl <S, K> FileSampleSerieIntoIterator<S, K>
 where
     S : FileSample<K>,
     K : SerieKey
 {
     /// Create a new iterator over a serie of Sample
     fn new(paths : Vec<String>) -> Self {
-        FileSampleSerieIterator {
+        FileSampleSerieIntoIterator {
             paths,
             next_index : 0,
             current_sample : VecDeque::new(),
@@ -90,7 +90,7 @@ where
     }
 }
 
-impl<S, K> Resetable for FileSampleSerieIterator<S, K>
+impl<S, K> Resetable for FileSampleSerieIntoIterator<S, K>
 where
     S : FileSample<K>,
     K : SerieKey
@@ -101,7 +101,7 @@ where
     }
 }
 
-impl<S, K> Iterator for FileSampleSerieIterator<S, K>
+impl<S, K> Iterator for FileSampleSerieIntoIterator<S, K>
 where
     S : FileSample<K>,
     K : SerieKey

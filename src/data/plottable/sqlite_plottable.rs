@@ -2,7 +2,7 @@ use sqlite::Connection;
 
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::sqlite_sample::SqliteSample;
-use crate::data::sample_serie::sqlite_sample_serie::SqliteSampleSerieIterator;
+use crate::data::sample_serie::sqlite_sample_serie::SqliteSampleSerieIntoIterator;
 
 use super::Plottable;
 
@@ -46,14 +46,16 @@ where
     }
 }
 
-impl<'it_lt, S, K, Sub> Plottable<'it_lt, S, K,  SqliteSampleSerieIterator<'it_lt, S, K, Sub>> for SqlitePlottable<S, K, Sub> 
+
+
+impl<'it_lt, S, K, Sub> Plottable<'it_lt, S, K,  SqliteSampleSerieIntoIterator<'it_lt, S, K, Sub>> for SqlitePlottable<S, K, Sub> 
 where 
     Sub : 'it_lt,
     S : SqliteSample<K, Sub> + 'it_lt,
     K : SerieKey +'it_lt,
 {
-    fn into_sample_iter<'a>(&'a self) -> SqliteSampleSerieIterator<'it_lt, S, K, Sub> where 'a : 'it_lt {
-        SqliteSampleSerieIterator::new(&self.conn, &self.sub).into_iter()
+    fn into_sample_iter<'a>(&'a self) -> SqliteSampleSerieIntoIterator<'it_lt, S, K, Sub> where 'a : 'it_lt {
+        SqliteSampleSerieIntoIterator::new(&self.conn, &self.sub).into_iter()
     }
 }
 
