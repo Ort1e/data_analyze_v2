@@ -39,16 +39,16 @@ where
     }
 }
 
-impl<S, K> IntoIterator for FileSampleSerie<S, K>
+impl<'a, S, K> IntoIterator for &'a FileSampleSerie<S, K>
 where
     S : FileSample<K>,
     K : SerieKey
 {
     type Item = S;
-    type IntoIter = FileSampleSerieIntoIterator<S, K>;
+    type IntoIter = FileSampleSerieIntoIterator<'a, S, K>;
 
     fn into_iter(self) -> Self::IntoIter {
-        FileSampleSerieIntoIterator::new(self.paths)
+        FileSampleSerieIntoIterator::new(&self.paths)
     }
 }
 
@@ -56,12 +56,12 @@ where
 
 /// An iterator over a serie of Sample
 #[derive(Debug, Clone)]
-pub struct FileSampleSerieIntoIterator<S, K>
+pub struct FileSampleSerieIntoIterator<'a, S, K>
 where
     S : FileSample<K>,
     K : SerieKey
 {
-    paths : Vec<String>,
+    paths : &'a Vec<String>,
     next_index : usize,
 
     current_sample : VecDeque<S>,
@@ -69,13 +69,13 @@ where
     _key : std::marker::PhantomData<K>,
 }
 
-impl <S, K> FileSampleSerieIntoIterator<S, K>
+impl <'a, S, K> FileSampleSerieIntoIterator<'a, S, K>
 where
     S : FileSample<K>,
     K : SerieKey
 {
     /// Create a new iterator over a serie of Sample
-    fn new(paths : Vec<String>) -> Self {
+    fn new(paths : &'a Vec<String>) -> Self {
         FileSampleSerieIntoIterator {
             paths,
             next_index : 0,
@@ -90,7 +90,7 @@ where
     }
 }
 
-impl<S, K> Resetable for FileSampleSerieIntoIterator<S, K>
+impl<'a, S, K> Resetable for FileSampleSerieIntoIterator<'a, S, K>
 where
     S : FileSample<K>,
     K : SerieKey
@@ -101,7 +101,7 @@ where
     }
 }
 
-impl<S, K> Iterator for FileSampleSerieIntoIterator<S, K>
+impl<'a, S, K> Iterator for FileSampleSerieIntoIterator<'a, S, K>
 where
     S : FileSample<K>,
     K : SerieKey

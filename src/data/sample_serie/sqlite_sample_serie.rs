@@ -41,7 +41,7 @@ where
     }
 }
 
-impl<'a, S, K, Sub> IntoIterator for SqliteSampleSerie<'a, S, K, Sub>
+impl<'a, 'it, S, K, Sub> IntoIterator for &'it SqliteSampleSerie<'a, S, K, Sub>
 where
     S : SqliteSample<K, Sub>,
     K : SerieKey

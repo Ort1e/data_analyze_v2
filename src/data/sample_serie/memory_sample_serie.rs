@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use crate::data::resetable::Resetable;
 use crate::data::sample::file_sample::FileSample;
 use crate::data::sample::key::SerieKey;
@@ -20,7 +18,7 @@ where
     S : Sample<K>,
     K : SerieKey
 {
-    samples : VecDeque<S>,
+    samples : Vec<S>,
 
     _key : std::marker::PhantomData<K>,
 }
@@ -44,16 +42,16 @@ where
     }
 }
 
-impl<S, K> IntoIterator for MemorySampleSerie<S, K>
+impl<'a, S, K> IntoIterator for &'a MemorySampleSerie<S, K>
 where
     S : Sample<K>,
     K : SerieKey
 {
     type Item = S;
-    type IntoIter = MemorySampleSerieIntoIterator<S, K>;
+    type IntoIter = MemorySampleSerieIntoIterator<'a, S, K>;
 
     fn into_iter(self) -> Self::IntoIter {
-        MemorySampleSerieIntoIterator::new(self.samples)
+        MemorySampleSerieIntoIterator::new(&self.samples)
     }
 }
 
@@ -86,97 +84,31 @@ where
     }
 }
 
-// ----------------------------------- ITERATOR ------------------------------------------
+// ----------------------------------- INTO ITERATOR ------------------------------------------
 
+/// An iterator over a serie of Sample
 #[derive(Debug, Clone)]
-pub struct MemorySampleSerieIterator<'a, S, K>
+pub struct MemorySampleSerieIntoIterator<'a, S, K>
 where
     S : Sample<K>,
     K : SerieKey
 {
-    samples : &'a MemorySampleSerie<S, K>,
+    samples : &'a Vec<S>,
     index : usize,
 
     _key : std::marker::PhantomData<K>,
 }
 
-impl<'a, S, K> MemorySampleSerieIterator<'a, S, K>
+impl <'a, S, K> MemorySampleSerieIntoIterator<'a, S, K>
 where
     S : Sample<K>,
     K : SerieKey
 {
     /// Create a new iterator over a serie of Sample
-    pub fn new(samples : &'a MemorySampleSerie<S, K>) -> Self {
-        MemorySampleSerieIterator {
-            samples,
-            index : 0,
-            _key : std::marker::PhantomData,
-        }
-    }
-}
-
-impl<'a, S, K> ExactSizeIterator for MemorySampleSerieIterator<'a, S, K>
-where
-    S : Sample<K>,
-    K : SerieKey
-{
-    fn len(&self) -> usize {
-        self.samples.samples.len() - self.index
-    }
-}
-
-impl<'a, S, K> Resetable for MemorySampleSerieIterator<'a, S, K>
-where
-    S : Sample<K>,
-    K : SerieKey
-{
-    fn reset(&mut self) {
-        self.index = 0;
-    }
-}
-
-impl<'a, S, K> Iterator for MemorySampleSerieIterator<'a, S, K>
-where
-    S : Sample<K>,
-    K : SerieKey
-{
-    type Item = &'a S;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.samples.samples.len() {
-            let result = Some(&self.samples.samples[self.index]);
-            self.index += 1;
-            result
-        } else {
-            None
-        }
-    }
-}
-
-
-// ----------------------------------- INTO ITERATOR ------------------------------------------
-
-/// An iterator over a serie of Sample
-#[derive(Debug, Clone)]
-pub struct MemorySampleSerieIntoIterator<S, K>
-where
-    S : Sample<K>,
-    K : SerieKey
-{
-    samples : VecDeque<S>,
-
-    _key : std::marker::PhantomData<K>,
-}
-
-impl <S, K> MemorySampleSerieIntoIterator<S, K>
-where
-    S : Sample<K>,
-    K : SerieKey
-{
-    /// Create a new iterator over a serie of Sample
-    fn new(samples : VecDeque<S>) -> Self {
+    fn new(samples : &'a Vec<S>) -> Self {
         MemorySampleSerieIntoIterator {
             samples,
+            index : 0,
             _key : std::marker::PhantomData,
         }
     }
@@ -187,7 +119,27 @@ where
     }
 }
 
-impl<S, K> Iterator for MemorySampleSerieIntoIterator<S, K>
+impl<'a, S, K> ExactSizeIterator for MemorySampleSerieIntoIterator<'a, S, K>
+where
+    S : Sample<K>,
+    K : SerieKey
+{
+    fn len(&self) -> usize {
+        self.samples.len() - self.index
+    }
+}
+
+impl<'a, S, K> Resetable for MemorySampleSerieIntoIterator<'a, S, K>
+where
+    S : Sample<K>,
+    K : SerieKey
+{
+    fn reset(&mut self) {
+        self.index = 0;
+    }
+}
+
+impl<'a, S, K> Iterator for MemorySampleSerieIntoIterator<'a, S, K>
 where
     S : Sample<K>,
     K : SerieKey
@@ -195,6 +147,12 @@ where
     type Item = S;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.samples.pop_front()
+        if self.index < self.samples.len() {
+            let result = Some(self.samples[self.index].clone());
+            self.index += 1;
+            result
+        } else {
+            None
+        }
     }
 }

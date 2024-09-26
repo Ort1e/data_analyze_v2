@@ -24,7 +24,7 @@ use super::utils::{axe_number_formater, write_legend, CustomPalette};
 /// If filter is Some, the data will be filtered by the given key and the given function (true to keep the data)
 /// NOTE : the number of series to plot must be equal to the number of subplots
 /// NOTE : If remove_outliers is Some, the outliers will be removed from the data with the given key
-pub fn scatter_plot<'it_lt, 'plot_lt, S, Key, It, Plot>(
+pub fn scatter_plot<'plot_lt, S, Key, It, Plot>(
     data : &'plot_lt Plot, 
     legend_serie_key : Option<Key>,
     save_path : &str,
@@ -37,9 +37,9 @@ pub fn scatter_plot<'it_lt, 'plot_lt, S, Key, It, Plot>(
 where
     Key : SerieKey,
     S : Sample<Key>,
-    It : Iterator<Item = S> + 'it_lt,
-    Plot : Plottable<'it_lt, S, Key, It>,
-    'plot_lt : 'it_lt
+    It : Iterator<Item = S>,
+    Plot : Plottable<S, Key>,
+    for<'a> &'a Plot: IntoIterator<Item = S>,
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());

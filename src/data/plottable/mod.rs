@@ -10,28 +10,23 @@ use super::resetable::Resetable;
 use super::sample::key::SerieKey;
 use super::sample::Sample;
 
-pub mod file_plottable;
-#[cfg(feature = "sqlite")]
-pub mod sqlite_plottable;
-
 type Point = (f32, f32);
 
 
 /// Trait for a plottable serie
-pub trait Plottable<'it_lt, S, K, It>
+pub trait Plottable<S, K>
 where
+    for<'a> &'a Self: IntoIterator<Item = S>,
     S : Sample<K>,
-    K : SerieKey,
-    It : Iterator<Item = S> + 'it_lt
+    K : SerieKey
 {
-
-    fn into_sample_iter<'a>(&'a self) -> It where 'a : 'it_lt;
 
     /// Create an iterator over the plottable serie
     /// The iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
     /// If the y_key is None, the iterator will return (x_key, 1) to allow aggregation
     fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, Option<K>), legend_key : Option<K>, filters : Option<&'a Filters<K>>) 
-    -> PlottableIterator<S, K, FilteredSerieIterator<S, K, It>> where 'a : 'it_lt {
+    -> PlottableIterator<S, K, FilteredSerieIterator<S, K, <&'a Self as IntoIterator>::IntoIter>>
+    {
         if let Some(legend_key) = legend_key.as_ref() {
             if legend_key.is_numeric() {
                 panic!("legend_key must be a string key");
@@ -44,24 +39,22 @@ where
             panic!("y_key must be a numeric key");
         }
         
-        
-        let sample_serie = self.into_sample_iter();
-        let filtered_serie = FilteredSerie::new(sample_serie, filters);
+        let filtered_serie = FilteredSerie::new(self.into_iter(), filters);
         PlottableIterator::new(filtered_serie.into_iter(), serie_keys, legend_key)
     }
 
     /// Collect statistics for multiple series sorted by a the uniquee value of a specified key.
     /// This function is optimized for speed but not for memory (O(n)).
     /// Warning: Avoid calling this function multiple times with different metrics as it may be slow.
-    fn collect_stats_sorted_by_unique_values<'a>(
-        &'a self, 
+    fn collect_stats_sorted_by_unique_values(
+        &self, 
         stats_serie_keys: &Vec<K>, 
         sort_value_key: &K
-    ) -> HashMap<String, HashMap<K, StatsSerie>> where 'a : 'it_lt {
+    ) -> HashMap<String, HashMap<K, StatsSerie>> {
         let mut serie_by_sort: HashMap<String, HashMap<K, Vec<f32>>> = HashMap::new();
 
         // Iterate through the sample iterator
-        let iter = self.into_sample_iter();
+        let iter = self.into_iter();
         for sample in iter {
             // Determine the sort value for this sample
             let sort_value = if sort_value_key.is_numeric() {
