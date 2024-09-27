@@ -163,8 +163,7 @@ impl ToHtmlDepth for TextContent {
 
 impl ToHtmlDepth for TextLink {
     fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
-        let parent = output_path.as_ref().parent().unwrap();
-        let file_path = parent.join("files").join(&self.file_name);
+        let file_path = Path::new("files").join(&self.file_name);
 
         format!("<a href=\"{}\">{}</a>", file_path.as_path().to_str().unwrap(), &self.text).to_html(output_path, depth)
     }
