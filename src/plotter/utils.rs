@@ -166,8 +166,22 @@ pub fn format_duration(seconds: f64) -> String {
     let minutes = (remaining_after_hours / SECONDS_IN_A_MINUTE).floor();
     let remaining_seconds = remaining_after_hours % SECONDS_IN_A_MINUTE;
 
-    // Format the result as a string
-    format!("{}D{}H{}m{}s", format_number(days), hours as u32, minutes as u32, format_number(remaining_seconds))
+    // Build the formatted string conditionally
+    let mut result = String::new();
+
+    if days > 0.0 {
+        result.push_str(&format!("{}D", days as u32));
+    }
+    if hours > 0.0 || days > 0.0 {
+        result.push_str(&format!("{}H", hours as u32));
+    }
+    if minutes > 0.0 || hours > 0.0 || days > 0.0 {
+        result.push_str(&format!("{}m", minutes as u32));
+    }
+
+    result.push_str(&format!("{}s", format_number(remaining_seconds)));
+
+    result
 }
 
 
@@ -216,16 +230,16 @@ mod tests {
         assert_eq!(format_duration(90000.0), "1D1H0m0s");
 
         // Test for hours and minutes
-        assert_eq!(format_duration(3661.0), "0D1H1m1s");
+        assert_eq!(format_duration(3661.0), "1H1m1s");
 
         // Test for seconds only
-        assert_eq!(format_duration(59.5), "0D0H0m59.5s");
+        assert_eq!(format_duration(59.5), "59.5s");
 
         // Test for fractional seconds
-        assert_eq!(format_duration(0.123), "0D0H0m0.123s");
+        assert_eq!(format_duration(0.123), "0.123s");
 
         // Test for small time in milliseconds
-        assert_eq!(format_duration(0.001), "0D0H0m0.001s");
+        assert_eq!(format_duration(0.001), "0.001s");
 
         // Test for multiple days and hours
         assert_eq!(format_duration(172800.0), "2D0H0m0s");
