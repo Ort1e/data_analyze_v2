@@ -141,7 +141,7 @@ pub fn format_number(n: f64) -> String {
         format!("{}{}", sign, trimmed)
     } else {
         // For numbers that require scientific notation
-        let formatted = format!("{:.4e}", abs_n);
+        let formatted = format!("{:.3e}", abs_n);
         let parts: Vec<&str> = formatted.split('e').collect();
         let mantissa = parts[0].trim_end_matches('0').trim_end_matches('.');
         let exponent = parts[1]; // Keep the exponent part as-is
@@ -198,7 +198,7 @@ mod tests {
         assert_eq!(format_number(0.123), "0.123");
         assert_eq!(format_number(0.0123), "0.012");
         assert_eq!(format_number(0.00123), "0.001");
-        assert_eq!(format_number(0.000123), "1.23e-4");
+        assert_eq!(format_number(0.00012345), "1.234e-4");
 
         // Test numbers in tens and hundreds
         assert_eq!(format_number(10.0), "10");
@@ -215,6 +215,7 @@ mod tests {
         // Test large numbers in scientific notation
         assert_eq!(format_number(1e6), "1e6");
         assert_eq!(format_number(1.234e9), "1.234e9");
+        assert_eq!(format_number(1.2345e9), "1.234e9");
 
         // Test negative numbers
         assert_eq!(format_number(-123.45), "-123.4");
