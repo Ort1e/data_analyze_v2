@@ -21,7 +21,7 @@ fn format_title(title : &str) -> String {
 /// This trait is used to convert the data to html
 pub trait ToHtmlDepth {
     /// convert the data to html
-    /// WARN : the output path is used to get the relative path of the images (must be absolute)
+    /// WARN : the output path is used to get the relative path of the images (must be absolute, representing the file html)
     fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String;
 }
 
@@ -116,7 +116,8 @@ impl ToHtmlDepth for Content {
         match self {
             Content::Text(t) => t.to_html(output_path, depth),
             Content::Image(s) => {
-                let relative_path = Path::new(s).strip_prefix(&output_path).unwrap();
+                let parent = output_path.as_ref().parent().unwrap();
+                let relative_path = Path::new(s).strip_prefix(&parent).unwrap();
                 format!("<img src=\"{}\"/>", relative_path.to_str().unwrap()).to_html(output_path, depth)
             },
             Content::Array(a) => a.to_html(output_path, depth),
@@ -162,10 +163,10 @@ impl ToHtmlDepth for TextContent {
 
 impl ToHtmlDepth for TextLink {
     fn to_html<P : AsRef<Path>>(&self, output_path : P, depth : usize) -> String {
-        let relative_path_o = Path::new(&self.href).strip_prefix(&output_path).unwrap();
-        let relative_path = relative_path_o.to_str().unwrap();
+        let parent = output_path.as_ref().parent().unwrap();
+        let file_path = parent.join("files").join(&self.file_name);
 
-        format!("<a href=\"{}\">{}</a>", relative_path, &self.text).to_html(output_path, depth)
+        format!("<a href=\"{}\">{}</a>", file_path.as_path().to_str().unwrap(), &self.text).to_html(output_path, depth)
     }
 }
 

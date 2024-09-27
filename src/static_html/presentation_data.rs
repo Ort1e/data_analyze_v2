@@ -387,21 +387,24 @@ impl From<Collapsable<TextContent>> for TextContent {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Hash, Eq, PartialOrd, Ord)]
 pub struct TextLink {
-    pub(crate) href : String,
+    pub(crate) file_name : String,
     pub(crate) text : String,
 }
 
 impl TextLink {
-    pub fn new(href : String, text : String) -> TextLink {
-        let absolute_path = Path::new(&href).canonicalize().unwrap();
+    /// Create a new text link
+    /// # Arguments
+    /// * `file_name` - the name of the file (it will be searched inside the "files" directory)
+    /// * `text` - the text of the link
+    pub fn new(file_name : String, text : String) -> TextLink {
         TextLink {
-            href : absolute_path.to_str().unwrap().to_string(),
+            file_name,
             text
         }
     }
 
     pub fn get_href(&self) -> &String {
-        &self.href
+        &self.file_name
     }
 
     pub fn get_text(&self) -> &String {
