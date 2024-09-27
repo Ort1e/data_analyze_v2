@@ -170,13 +170,25 @@ pub fn format_duration(seconds: f64) -> String {
     let mut result = String::new();
 
     if days > 0.0 {
-        result.push_str(&format!("{}D", days as u32));
+        result.push_str(&format!("{}d", days as u32));
     }
+
     if hours > 0.0 || days > 0.0 {
-        result.push_str(&format!("{}H", hours as u32));
+        if !result.is_empty() {
+            result.push_str(" ");
+        }
+        result.push_str(&format!("{}h", hours as u32));
     }
+
     if minutes > 0.0 || hours > 0.0 || days > 0.0 {
+        if !result.is_empty() {
+            result.push_str(" ");
+        }
         result.push_str(&format!("{}m", minutes as u32));
+    }
+
+    if !result.is_empty() {
+        result.push_str(" ");
     }
 
     result.push_str(&format!("{}s", format_number(remaining_seconds)));
@@ -225,13 +237,13 @@ mod tests {
     #[test]
     fn test_format_duration() {
         // Test for whole days
-        assert_eq!(format_duration(86400.0), "1D0H0m0s");
+        assert_eq!(format_duration(86400.0), "1d 0h 0m 0s");
 
         // Test for days and hours
-        assert_eq!(format_duration(90000.0), "1D1H0m0s");
+        assert_eq!(format_duration(90000.0), "1d 1h 0m 0s");
 
         // Test for hours and minutes
-        assert_eq!(format_duration(3661.0), "1H1m1s");
+        assert_eq!(format_duration(3661.0), "1h 1m 1s");
 
         // Test for seconds only
         assert_eq!(format_duration(59.5), "59.5s");
@@ -243,7 +255,7 @@ mod tests {
         assert_eq!(format_duration(0.001), "0.001s");
 
         // Test for multiple days and hours
-        assert_eq!(format_duration(172800.0), "2D0H0m0s");
-        assert_eq!(format_duration(172872.0), "2D0H1m12s");
+        assert_eq!(format_duration(172800.0), "2d 0h 0m 0s");
+        assert_eq!(format_duration(172872.0), "2d 0h 1m 12s");
     }
 }
