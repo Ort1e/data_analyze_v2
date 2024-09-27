@@ -19,12 +19,14 @@ impl StatsSerie {
             stats.insert(MetricName::Mean, MetricValue::mean(f64::NAN));
             stats.insert(MetricName::Median, MetricValue::median(f64::NAN));
             stats.insert(MetricName::Additive, MetricValue::additive(f64::NAN));
+            stats.insert(MetricName::NbValues, MetricValue::nb_values(0));
 
             return Self {
                 serie : serie.clone(),
                 stats,
             }
         }
+        let nb_value = serie.len() as u64;
 
         #[cfg(not(feature = "parrallelize"))]
         let additive = serie.iter().map(|f| *f as f64).sum::<f64>();
@@ -49,6 +51,8 @@ impl StatsSerie {
         }
 
         stats.insert(MetricName::Additive, MetricValue::additive(additive));
+
+        stats.insert(MetricName::NbValues, MetricValue::nb_values(nb_value));
 
         Self {
             serie : serie.clone(),
@@ -108,6 +112,13 @@ impl MetricValue {
             value,
         }
     }
+
+    pub fn nb_values(value : u64) -> Self {
+        Self {
+            name : MetricName::NbValues,
+            value : value as f64,
+        }
+    }
 }
 
 
@@ -116,6 +127,7 @@ pub enum MetricName {
     Mean,
     Median,
     Additive,
+    NbValues,
 }
 
 impl Display for MetricName {
@@ -131,6 +143,7 @@ impl MetricName {
             MetricName::Mean => "mean".to_string(),
             MetricName::Median => "median".to_string(),
             MetricName::Additive => "additive".to_string(),
+            MetricName::NbValues => "nb_values".to_string(),
         }
     }
 }
