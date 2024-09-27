@@ -229,5 +229,6 @@ mod tests {
 
         // Test for multiple days and hours
         assert_eq!(format_duration(172800.0), "2D0H0m0s");
+        assert_eq!(format_duration(172872.0), "2D0H1m12s");
     }
 }
