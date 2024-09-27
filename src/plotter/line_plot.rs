@@ -16,7 +16,7 @@ use crate::stat::stats_serie::MetricName;
 
 use super::layout::Layout;
 use super::plot_data::PlotData;
-use super::utils::{axe_number_formater, write_legend, CustomPalette};
+use super::utils::{format_number_f32, write_legend, CustomPalette};
 
 
 
@@ -105,8 +105,8 @@ where
         chart.configure_mesh()
             .x_desc(x_serie_key.get_display_name().as_str())
             .y_desc(y_serie_name.as_str())
-            .x_label_formatter(&axe_number_formater)
-            .y_label_formatter(&axe_number_formater)
+            .x_label_formatter(&format_number_f32)
+            .y_label_formatter(&format_number_f32)
             .draw()?;
 
 

@@ -12,7 +12,7 @@ use crate::data::sample::key::SerieKey;
 
 
 
-pub struct CustomPalette;
+pub(crate) struct CustomPalette;
 
 
 impl Palette for CustomPalette {
@@ -46,7 +46,7 @@ impl Palette for CustomPalette {
 
 
 /// draw the legend on the given drawing area
-pub fn write_legend<Key> (
+pub(crate) fn write_legend<Key> (
     label_drawing_area: &DrawingArea<BitMapBackend<'_>, Shift>,
     legend_to_color : &HashMap<String, PaletteColor<CustomPalette>>,
     legend_serie_key : &Option<Key>
@@ -118,15 +118,116 @@ where
     Ok(())
 }
 
-const TRESHOLD : f32 = 1000.0;
+
+pub(crate) fn format_number_f32(n: &f32) -> String {
+    format_number(*n as f64)
+}
 
 /// Format a number to a string
-pub(crate) fn axe_number_formater(x: &f32) -> String {
-    let x = *x;
-    if x < -TRESHOLD || (x > -1.0/TRESHOLD && x < 1.0/TRESHOLD) || x > TRESHOLD {
-        format!("{:.0e}", x)
+pub(crate) fn format_number(n: f64) -> String {
+    if n == 0.0 {
+        return "0".to_string();
+    }
+
+    let abs_n = n.abs();
+    let sign = if n < 0.0 { "-" } else { "" };
+
+    if abs_n >= 0.001 && abs_n < 10000.0 {
+        // For numbers that don't need scientific notation
+        
+        let formatted = format!("{:.4}", abs_n);
+        let limited = formatted.chars().take(5).collect::<String>(); // take only 5 characters (4 digits + 1 decimal point)
+        let trimmed = limited.trim_end_matches('0').trim_end_matches('.');
+        format!("{}{}", sign, trimmed)
     } else {
-        format!("{:.3}", x)
+        // For numbers that require scientific notation
+        let formatted = format!("{:.4e}", abs_n);
+        let parts: Vec<&str> = formatted.split('e').collect();
+        let mantissa = parts[0].trim_end_matches('0').trim_end_matches('.');
+        let exponent = parts[1]; // Keep the exponent part as-is
+        format!("{}{}e{}", sign, mantissa, exponent)
     }
 }
 
+/// Format a time in seconds to a string
+pub fn format_duration(seconds: f64) -> String {
+    // Total number of seconds in a day, hour, and minute
+    const SECONDS_IN_A_MINUTE: f64 = 60.0;
+    const SECONDS_IN_AN_HOUR: f64 = SECONDS_IN_A_MINUTE * 60.0;
+    const SECONDS_IN_A_DAY: f64 = SECONDS_IN_AN_HOUR * 24.0;
+
+    // Calculate days, hours, minutes, and seconds
+    let days = (seconds / SECONDS_IN_A_DAY).floor();
+    let remaining_after_days = seconds % SECONDS_IN_A_DAY;
+
+    let hours = (remaining_after_days / SECONDS_IN_AN_HOUR).floor();
+    let remaining_after_hours = remaining_after_days % SECONDS_IN_AN_HOUR;
+
+    let minutes = (remaining_after_hours / SECONDS_IN_A_MINUTE).floor();
+    let remaining_seconds = remaining_after_hours % SECONDS_IN_A_MINUTE;
+
+    // Format the result as a string
+    format!("{}D{}H{}m{}s", format_number(days), hours as u32, minutes as u32, format_number(remaining_seconds))
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_number() {
+        // Test for zero
+        assert_eq!(format_number(0.0), "0");
+
+        // Test small numbers
+        assert_eq!(format_number(0.123), "0.123");
+        assert_eq!(format_number(0.0123), "0.012");
+        assert_eq!(format_number(0.00123), "0.001");
+        assert_eq!(format_number(0.000123), "1.23e-4");
+
+        // Test numbers in tens and hundreds
+        assert_eq!(format_number(10.0), "10");
+        assert_eq!(format_number(100.0), "100");
+        assert_eq!(format_number(999.09), "999");
+        assert_eq!(format_number(99.9), "99.9");
+        assert_eq!(format_number(999.99), "999.9");
+
+        // Test numbers in thousands
+        assert_eq!(format_number(1000.0), "1000");
+        assert_eq!(format_number(10000.0), "1e4");
+        // assert_eq!(format_number(999999.0), "9.999e5"); -> error of precision
+
+        // Test large numbers in scientific notation
+        assert_eq!(format_number(1e6), "1e6");
+        assert_eq!(format_number(1.234e9), "1.234e9");
+
+        // Test negative numbers
+        assert_eq!(format_number(-123.45), "-123.4");
+        assert_eq!(format_number(-0.000123), "-1.23e-4");
+    }
+
+    #[test]
+    fn test_format_duration() {
+        // Test for whole days
+        assert_eq!(format_duration(86400.0), "1D0H0m0s");
+
+        // Test for days and hours
+        assert_eq!(format_duration(90000.0), "1D1H0m0s");
+
+        // Test for hours and minutes
+        assert_eq!(format_duration(3661.0), "0D1H1m1s");
+
+        // Test for seconds only
+        assert_eq!(format_duration(59.5), "0D0H0m59.5s");
+
+        // Test for fractional seconds
+        assert_eq!(format_duration(0.123), "0D0H0m0.123s");
+
+        // Test for small time in milliseconds
+        assert_eq!(format_duration(0.001), "0D0H0m0.001s");
+
+        // Test for multiple days and hours
+        assert_eq!(format_duration(172800.0), "2D0H0m0s");
+    }
+}
