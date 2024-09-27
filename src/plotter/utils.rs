@@ -124,7 +124,7 @@ pub(crate) fn format_number_f32(n: &f32) -> String {
 }
 
 /// Format a number to a string
-pub(crate) fn format_number(n: f64) -> String {
+pub fn format_number(n: f64) -> String {
     if n == 0.0 {
         return "0".to_string();
     }
