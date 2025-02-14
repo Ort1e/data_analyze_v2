@@ -45,7 +45,7 @@ where
     }
 }
 
-impl<'a, S, K> IntoIterator for &'a MemorySampleSerie<S, K>
+impl<'a, S, K> IntoIterator for &'a mut MemorySampleSerie<S, K>
 where
     S : Sample<K>,
     K : SerieKey
@@ -71,7 +71,7 @@ where
     S : FileSample<K>,
     K : SerieKey
 {
-    fn from(samples : FileSampleSerie<S, K>) -> Self {
+    fn from(mut samples : FileSampleSerie<S, K>) -> Self {
         MemorySampleSerie {
             samples : samples.into_iter().collect(),
             _key : std::marker::PhantomData,
@@ -85,7 +85,7 @@ where
     S : SqliteSample<K, Sub>,
     K : SerieKey
 {
-    fn from(samples : SqliteSampleSerie<'a, S, K, Sub>) -> Self {
+    fn from(mut samples : SqliteSampleSerie<'a, S, K, Sub>) -> Self {
         MemorySampleSerie {
             samples : samples.into_iter().collect(),
             _key : std::marker::PhantomData,

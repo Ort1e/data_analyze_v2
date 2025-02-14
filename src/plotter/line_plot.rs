@@ -31,7 +31,7 @@ use super::utils::{format_number_f32, write_legend, CustomPalette};
 /// NOTE : If remove_outliers is Some, the outliers will be removed from the data with the given key
 /// NOTE : The aggregation_metrics is the metric used to aggregate the data with the same x value
 pub fn line_plot<'plot_lt, S, Key, Plot>(
-    data : &'plot_lt Plot, 
+    data : &'plot_lt mut Plot, 
     legend_serie_key : Option<Key>,
     save_path : &str,
     layout : &Layout,
@@ -45,7 +45,7 @@ where
     Key : SerieKey,
     S : Sample<Key>,
     Plot : Plottable<S, Key>,
-    for<'a> &'a Plot: IntoIterator<Item = S>,
+    for<'a> &'a mut Plot: IntoIterator<Item = S>,
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());
