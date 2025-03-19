@@ -31,7 +31,7 @@ use super::utils::{format_number_f32, write_legend, CustomPalette};
 /// NOTE : If remove_outliers is Some, the outliers will be removed from the data with the given key
 /// NOTE : The aggregation_metrics is the metric used to aggregate the data with the same x value
 pub fn line_plot<'plot_lt, S, Key, Plot>(
-    data : &'plot_lt mut Plot, 
+    data : &'plot_lt Plot, 
     legend_serie_key : Option<Key>,
     save_path : &str,
     layout : &Layout,

@@ -3,7 +3,9 @@ use std::path::Path;
 
 use plot_helper::data::sample_serie::file_sample_serie::FileSampleSerie;
 use plot_helper::plotter::layout::Layout;
+use plot_helper::plotter::line_plot::line_plot;
 use plot_helper::plotter::scatter_plot::scatter_plot;
+use plot_helper::stat::stats_serie::MetricName;
 use series::data::file_sample_test::FileTestSample;
 use series::data::key::TestKey;
 
@@ -19,9 +21,14 @@ const OUPUT_DIR_PATH : &'static str = "tests/ressources/output/";
 #[test]
 fn memory_sample_test() {
 
-    let output_file_path = Path::new(OUPUT_DIR_PATH).join("memory_sample_test.png");
-    if output_file_path.exists() {
-        fs::remove_file(&output_file_path).unwrap();
+    let output_scatter_file_path = Path::new(OUPUT_DIR_PATH).join("memory_sample_scatter_test.png");
+    if output_scatter_file_path.exists() {
+        fs::remove_file(&output_scatter_file_path).unwrap();
+    }
+
+    let output_line_file_path = Path::new(OUPUT_DIR_PATH).join("memory_sample_line_test.png");
+    if output_line_file_path.exists() {
+        fs::remove_file(&output_line_file_path).unwrap();
     }
 
     // get all the json files in the directory
@@ -41,7 +48,7 @@ fn memory_sample_test() {
     scatter_plot(
         &plot, 
         Some(TestKey::Test1Str), 
-        output_file_path.as_os_str().to_str().unwrap(), 
+        output_scatter_file_path.as_os_str().to_str().unwrap(), 
         &Layout::new(2, 1), 
         vec![
             (TestKey::Test1Num, Some(TestKey::Test2Num), None),
@@ -50,5 +57,20 @@ fn memory_sample_test() {
         false
     ).unwrap();
 
-    assert!(output_file_path.exists());
+    assert!(output_scatter_file_path.exists());
+
+    line_plot(
+        &plot, 
+        Some(TestKey::Test1Str), 
+        output_line_file_path.as_os_str().to_str().unwrap(), 
+        &Layout::new(2, 1), 
+        vec![
+            (TestKey::Test1Num, Some(TestKey::Test2Num), None),
+            (TestKey::Test1Num, Some(TestKey::Test2Num), None)
+        ], 
+        false,
+        MetricName::Mean
+    ).unwrap();
+
+    assert!(output_line_file_path.exists());
 }
