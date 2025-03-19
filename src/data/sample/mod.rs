@@ -5,8 +5,6 @@ pub mod file_sample;
 
 #[cfg(feature = "sqlite")]
 pub mod sqlite_sample;
-#[cfg(feature = "postgres")]
-pub mod postgres_sample;
 
 /// Define a sample linked to a key
 pub trait Sample<Key>

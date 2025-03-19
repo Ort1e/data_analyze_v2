@@ -16,7 +16,7 @@ type Point = (f32, f32);
 /// Trait for a plottable serie
 pub trait Plottable<S, K>
 where
-    for<'a> &'a mut Self: IntoIterator<Item = S>, // &'a Self must be an IntoIterator over S
+    for<'a> &'a Self: IntoIterator<Item = S>, // &'a Self must be an IntoIterator over S
     S : Sample<K>,
     K : SerieKey
 {
@@ -24,14 +24,14 @@ where
     /// Create an iterator over the plottable serie
     /// The iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
     /// If the y_key is None, the iterator will return (x_key, 1) to allow aggregation
-    fn into_iter_with_filter<'a>(&'a mut self, serie_keys : (K, Option<K>), legend_key : Option<K>, filters : Option<&'a Filters<K>>) 
+    fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, Option<K>), legend_key : Option<K>, filters : Option<&'a Filters<K>>) 
     -> PlottableIterator<
         S, 
         K, 
         FilteredSerieIterator<
             S, 
             K, 
-            <&'a mut Self as IntoIterator>::IntoIter // The iterator over S
+            <&'a Self as IntoIterator>::IntoIter // The iterator over S
         >
     >
     {

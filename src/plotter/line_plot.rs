@@ -45,7 +45,7 @@ where
     Key : SerieKey,
     S : Sample<Key>,
     Plot : Plottable<S, Key>,
-    for<'a> &'a mut Plot: IntoIterator<Item = S>,
+    for<'a> &'a Plot: IntoIterator<Item = S>,
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());

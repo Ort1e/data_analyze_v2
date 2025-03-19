@@ -40,7 +40,7 @@ where
     }
 }
 
-impl<'a, S, K> IntoIterator for &'a mut FileSampleSerie<S, K>
+impl<'a, S, K> IntoIterator for &'a FileSampleSerie<S, K>
 where
     S : FileSample<K>,
     K : SerieKey

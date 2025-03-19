@@ -20,6 +20,9 @@ const OUPUT_DIR_PATH : &'static str = "tests/ressources/output/";
 fn memory_sample_test() {
 
     let output_file_path = Path::new(OUPUT_DIR_PATH).join("memory_sample_test.png");
+    if output_file_path.exists() {
+        fs::remove_file(&output_file_path).unwrap();
+    }
 
     // get all the json files in the directory
     let entries = fs::read_dir(FILE_SAMPLES_DIR_PATH).unwrap();
@@ -32,11 +35,11 @@ fn memory_sample_test() {
         }
     }
 
-    let mut plot: FileSampleSerie<FileTestSample, TestKey> = FileSampleSerie::new(file_paths);
+    let plot: FileSampleSerie<FileTestSample, TestKey> = FileSampleSerie::new(file_paths);
 
     
     scatter_plot(
-        &mut plot, 
+        &plot, 
         Some(TestKey::Test1Str), 
         output_file_path.as_os_str().to_str().unwrap(), 
         &Layout::new(2, 1), 
@@ -46,4 +49,6 @@ fn memory_sample_test() {
         ], 
         false
     ).unwrap();
+
+    assert!(output_file_path.exists());
 }
