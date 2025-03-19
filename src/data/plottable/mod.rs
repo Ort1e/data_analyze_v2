@@ -55,7 +55,7 @@ where
     /// This function is optimized for speed but not for memory (O(n)).
     /// Warning: Avoid calling this function multiple times with different metrics as it may be slow.
     fn collect_stats_sorted_by_unique_values(
-        &mut self, 
+        &self, 
         stats_serie_keys: &Vec<K>, 
         sort_value_key: &K
     ) -> HashMap<String, HashMap<K, StatsSerie>> {
