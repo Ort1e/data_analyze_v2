@@ -43,7 +43,7 @@ pub fn line_plot<'plot_lt, S, Key, Plot>(
 ) -> Result<(), Box<dyn std::error::Error>> 
 where
     Key : SerieKey,
-    S : Sample<Key> + 'plot_lt,
+    S : Sample<Key>,
     Plot : Plottable<'plot_lt, S, Key>,
     &'plot_lt Plot : IntoIterator<Item = S>
 {
