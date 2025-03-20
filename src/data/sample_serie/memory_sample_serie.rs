@@ -58,10 +58,10 @@ where
     }
 }
 
-impl<S, K> Plottable<S, K> for MemorySampleSerie<S, K>
+impl<'a, S, K> Plottable<'a, S, K> for MemorySampleSerie<S, K>
 where
-    S : Sample<K>,
-    K : SerieKey
+    S : Sample<K> + 'a,
+    K : SerieKey + 'a
 {}
 
 // ----------------------------------- FROM ------------------------------------------

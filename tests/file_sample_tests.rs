@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 
+use plot_helper::data::filtering::{Filter, Filters};
 use plot_helper::data::sample_serie::file_sample_serie::FileSampleSerie;
 use plot_helper::plotter::layout::Layout;
 use plot_helper::plotter::line_plot::line_plot;
@@ -29,6 +30,11 @@ fn memory_sample_test() {
     let output_line_file_path = Path::new(OUPUT_DIR_PATH).join("memory_sample_line_test.png");
     if output_line_file_path.exists() {
         fs::remove_file(&output_line_file_path).unwrap();
+    }
+
+    let output_filtered_line_file_path = Path::new(OUPUT_DIR_PATH).join("memory_sample_filtered_line_test.png");
+    if output_filtered_line_file_path.exists() {
+        fs::remove_file(&output_filtered_line_file_path).unwrap();
     }
 
     // get all the json files in the directory
@@ -73,4 +79,22 @@ fn memory_sample_test() {
     ).unwrap();
 
     assert!(output_line_file_path.exists());
+
+    let filter = Filters::new(vec![Filter::new_number(
+        TestKey::Test1Num, 
+        move |l : f32| l >= 0.05
+    )]);
+
+    line_plot(
+        &plot, 
+        Some(TestKey::Test1Str), 
+        output_filtered_line_file_path.as_os_str().to_str().unwrap(), 
+        &Layout::new(2, 1), 
+        vec![
+            (TestKey::Test1Num, Some(TestKey::Test2Num), None),
+            (TestKey::Test1Num, Some(TestKey::Test2Num), Some(&filter))
+        ], 
+        false,
+        MetricName::Mean
+    ).unwrap();
 }

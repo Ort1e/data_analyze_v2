@@ -55,10 +55,11 @@ where
     }
 }
 
-impl<'a, S, K, Sub> Plottable<S, K> for SqliteSampleSerie<'a, S, K, Sub>
+impl<'a, S, K, Sub> Plottable<'a, S, K> for SqliteSampleSerie<'a, S, K, Sub>
 where
-    S : SqliteSample<K, Sub>,
-    K : SerieKey
+    S : SqliteSample<K, Sub>+ 'a,
+    K : SerieKey + 'a,
+    Sub : 'a
 {}
 
 // -----------------------------------------------------------------------------

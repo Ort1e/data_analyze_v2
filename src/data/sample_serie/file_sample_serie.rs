@@ -53,10 +53,10 @@ where
     }
 }
 
-impl<S, K> Plottable<S, K> for FileSampleSerie<S, K>
+impl<'a, S, K> Plottable<'a, S, K> for FileSampleSerie<S, K>
 where
-    S : FileSample<K>,
-    K : SerieKey
+    S : FileSample<K> + 'a,
+    K : SerieKey + 'a
 {}
 
 // -----------------------------------------------------------------------------

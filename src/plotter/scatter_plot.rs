@@ -36,9 +36,9 @@ pub fn scatter_plot<'plot_lt, S, Key, Plot>(
 ) -> Result<(), Box<dyn std::error::Error>> 
 where
     Key : SerieKey,
-    S : Sample<Key>,
-    Plot : Plottable<S, Key>,
-    for<'a> &'a Plot: IntoIterator<Item = S>,
+    S : Sample<Key> + 'plot_lt,
+    Plot : Plottable<'plot_lt, S, Key> + 'plot_lt,
+    &'plot_lt Plot: IntoIterator<Item = S>,
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());

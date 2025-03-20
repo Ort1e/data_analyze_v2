@@ -14,9 +14,10 @@ type Point = (f32, f32);
 
 
 /// Trait for a plottable serie
-pub trait Plottable<S, K>
+pub trait Plottable<'plot, S, K>
 where
-    for<'a> &'a Self: IntoIterator<Item = S>, // &'a Self must be an IntoIterator over S
+    Self : 'plot, 
+    &'plot Self: IntoIterator<Item = S>, // &'a Self must be an IntoIterator over S
     S : Sample<K>,
     K : SerieKey
 {
@@ -24,14 +25,14 @@ where
     /// Create an iterator over the plottable serie
     /// The iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
     /// If the y_key is None, the iterator will return (x_key, 1) to allow aggregation
-    fn into_iter_with_filter<'a>(&'a self, serie_keys : (K, Option<K>), legend_key : Option<K>, filters : Option<&'a Filters<K>>) 
+    fn into_iter_with_filter(&'plot self, serie_keys : (K, Option<K>), legend_key : Option<K>, filters : Option<&'plot Filters<K>>) 
     -> PlottableIterator<
         S, 
         K, 
         FilteredSerieIterator<
             S, 
             K, 
-            <&'a Self as IntoIterator>::IntoIter // The iterator over S
+            <&'plot Self as IntoIterator>::IntoIter // The iterator over S
         >
     >
     {
@@ -55,7 +56,7 @@ where
     /// This function is optimized for speed but not for memory (O(n)).
     /// Warning: Avoid calling this function multiple times with different metrics as it may be slow.
     fn collect_stats_sorted_by_unique_values(
-        &self, 
+        &'plot self, 
         stats_serie_keys: &Vec<K>, 
         sort_value_key: &K
     ) -> HashMap<String, HashMap<K, StatsSerie>> {
