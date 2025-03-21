@@ -8,7 +8,7 @@ use plotters::series::LineSeries;
 use plotters::style::{Color, IntoFont, Palette, PaletteColor, WHITE};
 
 use crate::data::filtering::Filters;
-use crate::data::plottable::Plottable;
+use crate::data::plottable::PlottableIterator;
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::Sample;
 use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE, ONE_FIG_SIZE};
@@ -30,13 +30,13 @@ use super::utils::{format_number_f32, write_legend, CustomPalette};
 /// NOTE : the number of series to plot must be equal to the number of subplots
 /// NOTE : If remove_outliers is Some, the outliers will be removed from the data with the given key
 /// NOTE : The aggregation_metrics is the metric used to aggregate the data with the same x value
-pub fn line_plot<'plot_lt, S, Key, Plot>(
-    data : &'plot_lt Plot, 
+pub fn line_plot<'a, S, Key, IntoIter>(
+    data : &'a IntoIter, 
     legend_serie_key : Option<Key>,
     save_path : &str,
     layout : &Layout,
 
-    series : Vec<(Key, Option<Key>, Option<&'plot_lt Filters<Key>>)>,
+    series : Vec<(Key, Option<Key>, Option<&Filters<Key>>)>,
     
     remove_outlier : bool,
     aggregation_metric : MetricName,
@@ -44,8 +44,7 @@ pub fn line_plot<'plot_lt, S, Key, Plot>(
 where
     Key : SerieKey,
     S : Sample<Key>,
-    Plot : Plottable<'plot_lt, S, Key>,
-    &'plot_lt Plot : IntoIterator<Item = S>
+    &'a IntoIter : IntoIterator<Item = S>
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());
@@ -75,14 +74,10 @@ where
             (x_serie_key, y_serie_key, filters), root)
         )
     in series.into_iter().zip(child_drawing_areas.iter()).enumerate() {
-        
-        
         // get the data
-        let data_it = data.into_iter_with_filter(
-            (x_serie_key, y_serie_key), 
-            legend_serie_key.clone(), 
-            filters
-        );
+        let data_without_filter = PlottableIterator::new(data.into_iter(), (x_serie_key, y_serie_key), legend_serie_key.clone());
+        let data_it = data_without_filter.with_filter(filters);
+        
         let plot_data = PlotData::from_it(data_it, Some(aggregation_metric.clone()), remove_outlier);
 
         // define the chart

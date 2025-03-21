@@ -1,4 +1,3 @@
-use crate::data::plottable::Plottable;
 use crate::data::resetable::Resetable;
 use crate::data::sample::file_sample::FileSample;
 use crate::data::sample::key::SerieKey;
@@ -58,11 +57,6 @@ where
     }
 }
 
-impl<'a, S, K> Plottable<'a, S, K> for MemorySampleSerie<S, K>
-where
-    S : Sample<K> + 'a,
-    K : SerieKey + 'a
-{}
 
 // ----------------------------------- FROM ------------------------------------------
 

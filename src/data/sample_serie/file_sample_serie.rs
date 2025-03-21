@@ -1,6 +1,5 @@
 use std::collections::VecDeque;
 
-use crate::data::plottable::Plottable;
 use crate::data::resetable::Resetable;
 use crate::data::sample::file_sample::FileSample;
 use crate::data::sample::key::SerieKey;
@@ -52,12 +51,6 @@ where
         FileSampleSerieIntoIterator::new(&self.paths)
     }
 }
-
-impl<'a, S, K> Plottable<'a, S, K> for FileSampleSerie<S, K>
-where
-    S : FileSample<K> + 'a,
-    K : SerieKey + 'a
-{}
 
 // -----------------------------------------------------------------------------
 

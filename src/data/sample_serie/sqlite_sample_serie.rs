@@ -2,7 +2,6 @@ use std::collections::VecDeque;
 
 use sqlite::{Connection, State, Statement};
 
-use crate::data::plottable::Plottable;
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::sqlite_sample::SqliteSample;
 
@@ -54,14 +53,6 @@ where
         SqliteSampleSerieIntoIterator::new(self.conn, &self.sub)
     }
 }
-
-impl<'plot, 'a, S, K, Sub> Plottable<'plot, S, K> for SqliteSampleSerie<'a, S, K, Sub>
-where
-    S : SqliteSample<K, Sub> + 'plot,
-    K : SerieKey + 'plot,
-    Sub : 'plot,
-    'a : 'plot
-{}
 
 // -----------------------------------------------------------------------------
 

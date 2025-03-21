@@ -12,60 +12,82 @@ use super::sample::Sample;
 
 type Point = (f32, f32);
 
+// ----------------------------------------------------------------------------
 
-/// Trait for a plottable serie
-pub trait Plottable<'plot_lt, S, K>
+/// An iterator over a plottable serie
+/// Note: the iterator is not sorted
+/// Note: the iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
+/// If the y_key is None, the iterator will return (x_key, 1) to allow aggregation
+#[derive(Debug, Clone)]
+pub struct PlottableIterator<S, K, It>
 where
-    &'plot_lt Self: IntoIterator<Item = S> + 'plot_lt, // &'a Self must be an IntoIterator over S
     S : Sample<K>,
-    K : SerieKey
+    K : SerieKey,
+    It : Iterator<Item = S>
 {
+    iterator : It,
+    serie_keys : (K, Option<K>),
+    legend_key : Option<K>,
+    x_min : Option<f32>,
+    x_max : Option<f32>,
+    y_min : Option<f32>,
+    y_max : Option<f32>,
+}
 
-    /// Create an iterator over the plottable serie
-    /// The iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
-    /// If the y_key is None, the iterator will return (x_key, 1) to allow aggregation
-    fn into_iter_with_filter<'f_lt>(&'plot_lt self, serie_keys : (K, Option<K>), legend_key : Option<K>, filters : Option<&'f_lt Filters<K>>) 
-    -> PlottableIterator<
-        S, 
-        K, 
-        FilteredSerieIterator<
-            S, 
-            K, 
-            <&'plot_lt Self as IntoIterator>::IntoIter // The iterator over S
-        >
-    >
-    where 
-        'f_lt : 'plot_lt
-    {
+impl<S, K, It> PlottableIterator<S, K, It>
+where
+    S : Sample<K>,
+    K : SerieKey,
+    It : Iterator<Item = S>
+{
+    /// Create a new plottable iterator over a serie of Sample
+    /// -args: iterator: the iterator over the serie of Sample
+    /// -args: serie_keys: the keys to use for the x and y values (x, y). If y is None, the iterator will return (x, 1) to allow aggregation
+    /// -args: legend_key: the key to use for the legend. If None, the legend will be "All"
+    pub fn new(iterator : It, serie_keys : (K, Option<K>), legend_key : Option<K>) -> Self {
         if let Some(legend_key) = legend_key.as_ref() {
             if legend_key.is_numeric() {
                 panic!("legend_key must be a string key");
             }
         }
+        
         if !serie_keys.0.is_numeric() {
             panic!("x_key must be a numeric key");
         }
+
         if serie_keys.1.is_some() && !serie_keys.1.unwrap().is_numeric() {
             panic!("y_key must be a numeric key");
         }
         
-        let filtered_serie = FilteredSerie::new(self.into_iter(), filters);
-        PlottableIterator::new(filtered_serie.into_iter(), serie_keys, legend_key)
+        PlottableIterator {
+            iterator,
+            serie_keys,
+            legend_key,
+            x_min : None,
+            x_max : None,
+            y_min : None,
+            y_max : None,
+        }
     }
 
+    /// Apply a filter to the iterator
+    pub fn with_filter(self, filters : Option<&Filters<K>>) -> PlottableIterator<S, K, FilteredSerieIterator<S, K, It>> {
+        let filtered_serie = FilteredSerie::new(self.iterator, filters);
+        PlottableIterator::new(filtered_serie.into_iter(), self.serie_keys, self.legend_key)
+    }
+    
     /// Collect statistics for multiple series sorted by a the uniquee value of a specified key.
     /// This function is optimized for speed but not for memory (O(n)).
     /// Warning: Avoid calling this function multiple times with different metrics as it may be slow.
-    fn collect_stats_sorted_by_unique_values(
-        &'plot_lt self, 
+    pub fn collect_stats_sorted_by_unique_values(
+        self, 
         stats_serie_keys: &Vec<K>, 
         sort_value_key: &K
     ) -> HashMap<String, HashMap<K, StatsSerie>> {
         let mut serie_by_sort: HashMap<String, HashMap<K, Vec<f32>>> = HashMap::new();
 
         // Iterate through the sample iterator
-        let iter = self.into_iter();
-        for sample in iter {
+        for sample in self.iterator {
             // Determine the sort value for this sample
             let sort_value = if sort_value_key.is_numeric() {
                 sample.get_numeric_value(sort_value_key).to_string()
@@ -97,61 +119,6 @@ where
             }).collect::<HashMap<K, StatsSerie>>();
             (sort_key, stats_map)
         }).collect()
-    }
-}
-
-
-// -----------------------------------------------------------------------------
-
-/// An iterator over a plottable serie
-/// Note: the iterator is not sorted
-/// Note: the iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
-#[derive(Debug, Clone)]
-pub struct PlottableIterator<S, K, It>
-where
-    S : Sample<K>,
-    K : SerieKey,
-    It : Iterator<Item = S>
-{
-    iterator : It,
-    serie_keys : (K, Option<K>),
-    legend_key : Option<K>,
-    x_min : Option<f32>,
-    x_max : Option<f32>,
-    y_min : Option<f32>,
-    y_max : Option<f32>,
-}
-
-impl<S, K, It> PlottableIterator<S, K, It>
-where
-    S : Sample<K>,
-    K : SerieKey,
-    It : Iterator<Item = S>
-{
-    pub fn new(iterator : It, serie_keys : (K, Option<K>), legend_key : Option<K>) -> Self {
-        if let Some(legend_key) = legend_key.as_ref() {
-            if legend_key.is_numeric() {
-                panic!("legend_key must be a string key");
-            }
-        }
-        
-        if !serie_keys.0.is_numeric() {
-            panic!("x_key must be a numeric key");
-        }
-
-        if serie_keys.1.is_some() && !serie_keys.1.unwrap().is_numeric() {
-            panic!("y_key must be a numeric key");
-        }
-        
-        PlottableIterator {
-            iterator,
-            serie_keys,
-            legend_key,
-            x_min : None,
-            x_max : None,
-            y_min : None,
-            y_max : None,
-        }
     }
 
     pub fn get_serie_keys(&self) -> (K, Option<K>) {

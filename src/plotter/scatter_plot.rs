@@ -9,7 +9,7 @@ use plotters::element::Circle;
 use plotters::style::{Color, IntoFont, Palette, PaletteColor, WHITE};
 
 use crate::data::filtering::Filters;
-use crate::data::plottable::Plottable;
+use crate::data::plottable::PlottableIterator;
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::Sample;
 use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE, ONE_FIG_SIZE};
@@ -24,21 +24,20 @@ use super::utils::{format_number_f32, write_legend, CustomPalette};
 /// If filter is Some, the data will be filtered by the given key and the given function (true to keep the data)
 /// NOTE : the number of series to plot must be equal to the number of subplots
 /// NOTE : If remove_outliers is Some, the outliers will be removed from the data with the given key
-pub fn scatter_plot<'plot_lt, S, Key, Plot>(
-    data : &'plot_lt Plot, 
+pub fn scatter_plot<'a, S, Key, IntoIter>(
+    data : &'a IntoIter, 
     legend_serie_key : Option<Key>,
     save_path : &str,
     layout : &Layout,
 
-    series : Vec<(Key, Option<Key>, Option<&'plot_lt Filters<Key>>)>,
+    series : Vec<(Key, Option<Key>, Option<&Filters<Key>>)>,
     
     remove_outlier : bool,
 ) -> Result<(), Box<dyn std::error::Error>> 
 where
     Key : SerieKey,
-    S : Sample<Key> + 'plot_lt,
-    Plot : Plottable<'plot_lt, S, Key> + 'plot_lt,
-    &'plot_lt Plot: IntoIterator<Item = S>,
+    S : Sample<Key>,
+    &'a IntoIter : IntoIterator<Item = S>,
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());
@@ -77,11 +76,9 @@ where
         };
        
         // get the data
-        let data_it = data.into_iter_with_filter(
-            (x_serie_key, y_serie_key), 
-            legend_serie_key.clone(), 
-            filters
-        );
+        let data_without_filter = PlottableIterator::new(data.into_iter(), (x_serie_key, y_serie_key), legend_serie_key.clone());
+        let data_it = data_without_filter.with_filter(filters);
+        
         let plot_data = PlotData::from_it(data_it, None, remove_outlier);
 
 
