@@ -24,7 +24,7 @@ where
     /// Create an iterator over the plottable serie
     /// The iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
     /// If the y_key is None, the iterator will return (x_key, 1) to allow aggregation
-    fn into_iter_with_filter(&'plot_lt self, serie_keys : (K, Option<K>), legend_key : Option<K>, filters : Option<&'plot_lt Filters<K>>) 
+    fn into_iter_with_filter<'f_lt>(&'plot_lt self, serie_keys : (K, Option<K>), legend_key : Option<K>, filters : Option<&'f_lt Filters<K>>) 
     -> PlottableIterator<
         S, 
         K, 
@@ -34,6 +34,8 @@ where
             <&'plot_lt Self as IntoIterator>::IntoIter // The iterator over S
         >
     >
+    where 
+        'f_lt : 'plot_lt
     {
         if let Some(legend_key) = legend_key.as_ref() {
             if legend_key.is_numeric() {
