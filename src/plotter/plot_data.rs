@@ -35,6 +35,7 @@ impl PlotData {
             data_collected.entry(key).or_insert_with(Vec::new).push(point);
         }
 
+
         if remove_outlier {
             for (_, serie) in data_collected.iter_mut() {
                 *serie = remove_outliers(mem::take(serie));
@@ -59,6 +60,11 @@ impl PlotData {
         }
 
         self_.compress();
+
+        // sort the data
+        for (_, serie) in self_.data.iter_mut() {
+            serie.sort_by(|(x1, _), (x2, _)| x1.partial_cmp(x2).unwrap());
+        }
 
         self_
     }

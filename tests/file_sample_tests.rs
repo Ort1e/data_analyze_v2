@@ -3,6 +3,7 @@ use std::path::Path;
 
 use plot_helper::data::filtering::{Filter, Filters};
 use plot_helper::data::sample_serie::file_sample_serie::FileSampleSerie;
+use plot_helper::data::sample_serie::memory_sample_serie::MemorySampleSerie;
 use plot_helper::plotter::layout::Layout;
 use plot_helper::plotter::line_plot::line_plot;
 use plot_helper::plotter::scatter_plot::scatter_plot;
@@ -49,6 +50,7 @@ fn memory_sample_test() {
     }
 
     let plot: FileSampleSerie<FileTestSample, TestKey> = FileSampleSerie::new(file_paths);
+    let plot: MemorySampleSerie<FileTestSample, TestKey> = plot.into();
 
     
     scatter_plot(
@@ -75,17 +77,17 @@ fn memory_sample_test() {
             (TestKey::Test1Num, Some(TestKey::Test2Num), None)
         ], 
         false,
-        MetricName::Mean
+        MetricName::Additive
     ).unwrap();
 
     assert!(output_line_file_path.exists());
 
     let filter = Filters::new(vec![Filter::new_number(
-        TestKey::Test1Num, 
-        move |l : f32| l >= 0.05
+        TestKey::Test2Num, 
+        move |l : f32| l <= 1.0
     )]);
 
-    line_plot(
+    scatter_plot(
         &plot, 
         Some(TestKey::Test1Str), 
         output_filtered_line_file_path.as_os_str().to_str().unwrap(), 
@@ -94,7 +96,8 @@ fn memory_sample_test() {
             (TestKey::Test1Num, Some(TestKey::Test2Num), None),
             (TestKey::Test1Num, Some(TestKey::Test2Num), Some(&filter))
         ], 
-        false,
-        MetricName::Mean
+        false
     ).unwrap();
+
+    assert!(output_filtered_line_file_path.exists());
 }
