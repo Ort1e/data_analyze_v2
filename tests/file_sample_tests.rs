@@ -53,7 +53,7 @@ fn memory_sample_test() {
     let plot: MemorySampleSerie<FileTestSample, TestKey> = plot.into();
 
     
-    scatter_plot(
+    scatter_plot::<FileTestSample, TestKey, _>(
         &plot, 
         Some(TestKey::Test1Str), 
         output_scatter_file_path.as_os_str().to_str().unwrap(), 
@@ -87,7 +87,7 @@ fn memory_sample_test() {
         move |l : f32| l <= 1.0
     )]);
 
-    scatter_plot(
+    scatter_plot::<FileTestSample, TestKey, _>(
         &plot, 
         Some(TestKey::Test1Str), 
         output_filtered_line_file_path.as_os_str().to_str().unwrap(), 

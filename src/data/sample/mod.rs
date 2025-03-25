@@ -7,9 +7,8 @@ pub mod file_sample;
 pub mod sqlite_sample;
 
 /// Define a sample linked to a key
-pub trait Sample<Key>
+pub trait Sample<Key> : Clone + Sized + Send + Sync
     where 
-        Self : Clone + Sized + Send + Sync,
         Key : SerieKey
 {
 
