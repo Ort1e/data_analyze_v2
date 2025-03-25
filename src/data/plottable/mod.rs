@@ -18,6 +18,7 @@ type Point = (f32, f32);
 /// Note: the iterator is not sorted
 /// Note: the iterator return a tuple (legend, points) with points as a vector of (x, y) points corresponding to the series_keys in order
 /// If the y_key is None, the iterator will return (x_key, 1) to allow aggregation
+/// The x_key serve also for the aggregation
 #[derive(Debug, Clone)]
 pub struct PlottableIterator<S, K, It>
 where
@@ -42,7 +43,7 @@ where
 {
     /// Create a new plottable iterator over a serie of Sample
     /// -args: iterator: the iterator over the serie of Sample
-    /// -args: serie_keys: the keys to use for the x and y values (x, y). If y is None, the iterator will return (x, 1) to allow aggregation
+    /// -args: serie_keys: the keys to use for the x and y values (x, y). If y is None, the iterator will return (x, 1) to allow aggregation. Serve also for the agregation
     /// -args: legend_key: the key to use for the legend. If None, the legend will be "All"
     pub fn new(iterator : It, serie_keys : (K, Option<K>), legend_key : Option<K>) -> Self {
         if let Some(legend_key) = legend_key.as_ref() {
@@ -81,10 +82,10 @@ where
     /// Warning: Avoid calling this function multiple times with different metrics as it may be slow.
     pub fn collect_stats_sorted_by_unique_values(
         self, 
-        stats_serie_keys: &Vec<K>, 
-        sort_value_key: &K
+        stats_serie_keys: &Vec<K>
     ) -> HashMap<String, HashMap<K, StatsSerie>> {
         let mut serie_by_sort: HashMap<String, HashMap<K, Vec<f32>>> = HashMap::new();
+        let sort_value_key = &self.serie_keys.0;
 
         // Iterate through the sample iterator
         for sample in self.iterator {
