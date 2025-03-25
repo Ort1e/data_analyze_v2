@@ -13,6 +13,9 @@ pub trait SerieKey : Eq + std::hash::Hash + Copy + Display + Ord + Send + Sync{
 
     /// if the serie is an object
     fn is_object(&self) -> bool;
+
+    /// get all the possible values of the key
+    fn get_possible_values() -> Vec<Self>;
 }
 
 
@@ -83,6 +86,9 @@ macro_rules! generate_plot_key {
                     match self {
                         $($key_name::$variant => KeyType::$key_type == KeyType::Object),*
                     }
+                }
+                fn get_possible_values() -> Vec<Self> {
+                    vec![$($key_name::$variant),*]
                 }
             }
 
