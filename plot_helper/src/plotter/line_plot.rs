@@ -1,7 +1,8 @@
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::Path;
 
-use plotters::backend::BitMapBackend;
+use plotters::backend::{BitMapBackend, PixelFormat, RGBPixel};
 use plotters::chart::ChartBuilder;
 use plotters::drawing::IntoDrawingArea;
 use plotters::series::LineSeries;
@@ -11,17 +12,13 @@ use crate::data::filtering::Filters;
 use crate::data::plottable::PlottableIterator;
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::Sample;
-use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE, ONE_FIG_SIZE};
+use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE};
 use crate::stat::stats_serie::MetricName;
 
+use super::get_global_size;
 use super::layout::Layout;
 use super::plot_data::PlotData;
 use super::utils::{format_number_f32, write_legend, CustomPalette};
-
-
-
-
-
 
 
 /// plot the given data as a line
@@ -46,17 +43,57 @@ where
     S : Sample<Key>,
     &'a IntoIter : IntoIterator<Item = S>
 {
+    // initialise the plotter
+    let (w, h) = get_global_size(layout);
+    let image_path_o = Path::new(save_path);
+    let mut file = std::fs::File::create(image_path_o)?;
+    let mut buffer = vec![0; (w * h * RGBPixel::PIXEL_SIZE as u32) as usize];
+
+
+    line_plot_with_buffer(
+        data, 
+        legend_serie_key, 
+        &mut buffer, 
+        layout, 
+        series, 
+        remove_outlier, 
+        aggregation_metric
+    )?;
+
+    file.write_all(&buffer)?;
+
+    Ok(())
+}
+
+
+
+
+pub fn line_plot_with_buffer<'a, S, Key, IntoIter>(
+    data : &'a IntoIter, 
+    legend_serie_key : Option<Key>,
+    save_buffer : &mut [u8],
+    layout : &Layout,
+
+    series : Vec<(Key, Option<Key>, Option<&Filters<Key>>)>,
+    
+    remove_outlier : bool,
+    aggregation_metric : MetricName,
+) -> Result<(), Box<dyn std::error::Error>> 
+where
+    Key : SerieKey,
+    S : Sample<Key>,
+    &'a IntoIter : IntoIterator<Item = S>
+{
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());
     }
 
-    // initialise the plotter
-    let image_path_o = Path::new(save_path);
+    
     // (w, h)
-    let global_size = (layout.width as u32 * ONE_FIG_SIZE.0 + LABEL_HORIZONTAL_SIZE, layout.height as u32 * ONE_FIG_SIZE.1);
+    let global_size = get_global_size(layout);
 
     // global drawing
-    let root_drawing_area = BitMapBackend::new(image_path_o, global_size).into_drawing_area();
+    let root_drawing_area = BitMapBackend::with_buffer(save_buffer, global_size).into_drawing_area();
     root_drawing_area.fill(&WHITE)?;
     // isolate the label area
     let (chart_drawing_area, label_drawing_area) = 
@@ -131,3 +168,4 @@ where
 
     Ok(())
 }
+
