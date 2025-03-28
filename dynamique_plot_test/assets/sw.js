@@ -2,8 +2,8 @@ var cacheName = 'egui-template-pwa';
 var filesToCache = [
   './',
   './index.html',
-  './dynamique_plot.js',
-  './dynamique_plot_bg.wasm',
+  './dynamique_plot_test.js',
+  './dynamique_plot_test_bg.wasm',
 ];
 
 /* Start the service worker and cache all of the app's content */

@@ -3,7 +3,8 @@ resolver = "2"
 members = [
     # root
     "plot_helper",
-    "dynamique_plot"
+    "dynamique_plot",
+    "dynamique_plot_test"
 ]
 
 
