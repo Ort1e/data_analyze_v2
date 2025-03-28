@@ -1,9 +1,14 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
+mod data;
+
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {
+    use data::FileInfo;
+    use plot_helper::data::sample_serie::memory_sample_serie::MemorySampleSerie;
+
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
     let native_options = eframe::NativeOptions {
@@ -17,16 +22,20 @@ fn main() -> eframe::Result {
             ),
         ..Default::default()
     };
+    let data = MemorySampleSerie::new(FileInfo::new());
+
     eframe::run_native(
         "eframe template",
         native_options,
-        Box::new(|cc| Ok(Box::new(dynamique_plot::TemplateApp::new(cc)))),
+        Box::new(|cc| Ok(Box::new(dynamique_plot::MyApp::new(cc, data)))),
     )
 }
 
 // When compiling to web using trunk:
 #[cfg(target_arch = "wasm32")]
 fn main() {
+    use data::FileInfo;
+    use plot_helper::data::sample_serie::memory_sample_serie::MemorySampleSerie;
     use eframe::wasm_bindgen::JsCast as _;
 
     // Redirect `log` message to `console.log` and friends:
@@ -45,12 +54,12 @@ fn main() {
             .expect("Failed to find the_canvas_id")
             .dyn_into::<web_sys::HtmlCanvasElement>()
             .expect("the_canvas_id was not a HtmlCanvasElement");
-
+        let data = MemorySampleSerie::new(FileInfo::new());
         let start_result = eframe::WebRunner::new()
             .start(
                 canvas,
                 web_options,
-                Box::new(|cc| Ok(Box::new(dynamique_plot::TemplateApp::new(cc)))),
+                Box::new(|cc| Ok(Box::new(dynamique_plot::MyApp::<>::new(cc, data)))),
             )
             .await;
 

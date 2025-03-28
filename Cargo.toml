@@ -29,3 +29,21 @@ plotters = "0.3.3"
 paste = "1.0.14" # concatenate macro identifier
 
 approx = "0.5.1"
+
+[profile.release]
+opt-level = 2 # fast and small wasm
+
+# Optimize all dependencies even in debug builds:
+[profile.dev.package."*"]
+opt-level = 2
+
+
+[patch.crates-io]
+
+# If you want to use the bleeding edge version of egui and eframe:
+# egui = { git = "https://github.com/emilk/egui", branch = "master" }
+# eframe = { git = "https://github.com/emilk/egui", branch = "master" }
+
+# If you fork https://github.com/emilk/egui you can test with:
+# egui = { path = "../egui/crates/egui" }
+# eframe = { path = "../egui/crates/eframe" }

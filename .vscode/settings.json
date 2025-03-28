@@ -1,7 +1,7 @@
 {
     
     "rust-analyzer.cargo.features": [
-       "sqlite"
+       //"sqlite"
     ],
     "rust-analyzer.check.targets": [
         "wasm32-unknown-unknown"

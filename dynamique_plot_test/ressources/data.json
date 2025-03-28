@@ -1,0 +1,62 @@
+[
+    {
+      "language": "Java",
+      "nb_line": 175,
+      "nb_char": 4785,
+      "file_name": "Main.java"
+    },
+    {
+      "language": "Java",
+      "nb_line": 200,
+      "nb_char": 5234,
+      "file_name": "Utils.java"
+    },
+    {
+      "language": "Java",
+      "nb_line": 150,
+      "nb_char": 4500,
+      "file_name": "Service.java"
+    },
+    {
+      "language": "Java",
+      "nb_line": 180,
+      "nb_char": 4950,
+      "file_name": "Controller.java"
+    },
+    {
+      "language": "Java",
+      "nb_line": 220,
+      "nb_char": 5800,
+      "file_name": "Repository.java"
+    },
+    {
+      "language": "C",
+      "nb_line": 120,
+      "nb_char": 3456,
+      "file_name": "main.c"
+    },
+    {
+      "language": "C",
+      "nb_line": 90,
+      "nb_char": 2789,
+      "file_name": "utils.c"
+    },
+    {
+      "language": "C",
+      "nb_line": 150,
+      "nb_char": 4120,
+      "file_name": "module.c"
+    },
+    {
+      "language": "C",
+      "nb_line": 200,
+      "nb_char": 5123,
+      "file_name": "driver.c"
+    },
+    {
+      "language": "C",
+      "nb_line": 175,
+      "nb_char": 4700,
+      "file_name": "handler.c"
+    }
+  ]
