@@ -1,0 +1,38 @@
+[package]
+name = "plot_helper"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+parrallelize = ["dep:rayon"] # add rayon to dependencies to parallelize
+sqlite = ["dep:sqlite"] # add sqlite to dependencies to use sqlite
+
+
+
+[package.metadata]
+# Include test resources
+test_resources = ["tests/test_data"]
+html_resources = ["ressources/static.html"]
+
+[dependencies]
+
+# legacy
+lazy_static = {workspace = true}
+serde = {workspace = true}
+serde_derive = {workspace = true}
+serde_json = {workspace = true}
+csv = {workspace = true}
+
+rayon = {workspace = true, optional = true}
+sqlite = {workspace = true, optional = true}
+
+# log
+log = {workspace = true}
+test-log = {workspace = true}
+
+# plot
+plotters = {workspace = true}
+paste = {workspace = true} # concatenate macro identifier
+
+[dev-dependencies]
+approx = {workspace = true}
