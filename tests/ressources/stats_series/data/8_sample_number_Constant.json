@@ -13,5 +13,6 @@
     "mean": 1.0,
     "median": 1.0,
     "q_1": 1.0,
-    "q_3": 1.0
+    "q_3": 1.0,
+    "standard_deviation": 0.0
 }

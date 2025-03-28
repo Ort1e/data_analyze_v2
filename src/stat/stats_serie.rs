@@ -20,6 +20,7 @@ impl StatsSerie {
             stats.insert(MetricName::Median, MetricValue::median(f64::NAN));
             stats.insert(MetricName::Additive, MetricValue::additive(f64::NAN));
             stats.insert(MetricName::NbValues, MetricValue::nb_values(0));
+            stats.insert(MetricName::StandardDeviation, MetricValue::standard_deviation(f64::NAN));
 
             return Self {
                 serie : serie.clone(),
@@ -53,6 +54,16 @@ impl StatsSerie {
         stats.insert(MetricName::Additive, MetricValue::additive(additive));
 
         stats.insert(MetricName::NbValues, MetricValue::nb_values(nb_value));
+
+        let standard_deviation = if serie.len() == 1 {
+            0.0
+        }else{
+            let mean = stats.get(&MetricName::Mean).unwrap().value;
+            let sum = serie.iter().map(|f| (*f as f64 - mean).powi(2)).sum::<f64>();
+            (sum / (serie.len() as f64 - 1.0)).sqrt()
+        };
+
+        stats.insert(MetricName::StandardDeviation, MetricValue::standard_deviation(standard_deviation));
 
         Self {
             serie : serie.clone(),
@@ -119,6 +130,13 @@ impl MetricValue {
             value : value as f64,
         }
     }
+
+    pub fn standard_deviation(value : f64) -> Self {
+        Self {
+            name : MetricName::StandardDeviation,
+            value,
+        }
+    }
 }
 
 
@@ -128,6 +146,7 @@ pub enum MetricName {
     Median,
     Additive,
     NbValues,
+    StandardDeviation,
 }
 
 impl Display for MetricName {
@@ -144,6 +163,7 @@ impl MetricName {
             MetricName::Median => "median".to_string(),
             MetricName::Additive => "additive".to_string(),
             MetricName::NbValues => "nb_values".to_string(),
+            MetricName::StandardDeviation => "standard_deviation".to_string(),
         }
     }
 }
