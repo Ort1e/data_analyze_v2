@@ -55,7 +55,8 @@ where
             );
 
             // Put my font first (highest priority):
-            fonts.families.insert(FontFamily::Name("arial".into()), vec!["ARIAL".to_owned()]);
+            fonts.families.insert(FontFamily::Name("sans-serif".into()), vec!["ARIAL".to_owned()]);
+            //fonts.families.get_mut(&FontFamily::Proportional).unwrap().insert(0, "ARIAL".to_owned());
 
             cc.egui_ctx.set_fonts(fonts);
         }
@@ -82,15 +83,16 @@ where
         // see https://github.com/bluurryy/noise-functions-demo/blob/e23b3eb6cb670412f0433fb06fcd9f97cc43e221/src/app.rs#L420
         let mut buffer = vec![0; self.graph_size.0 * self.graph_size.1 * RGBPixel::PIXEL_SIZE];
 
-        let bitmap_backend = BitMapBackend::with_buffer(
+        let backend = BitMapBackend::with_buffer(
             &mut buffer,
             (self.graph_size.0 as u32, self.graph_size.1 as u32),
         );
 
+
         scatter_plot_with_backend(
             &self.data, 
             None, 
-            bitmap_backend, 
+            backend, 
             &Layout::new(1, 1),
             vec![
                 (self.command.get_x_axis().unwrap(), self.command.get_y_axis(), None)

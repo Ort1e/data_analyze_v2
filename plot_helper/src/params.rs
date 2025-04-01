@@ -5,6 +5,6 @@ pub const LABEL_HORIZONTAL_SIZE : u32 = 150;
 
 pub const FIGURE_CAPTION_FONT_SIZE : u32 = 30;
 
-pub const FIGURE_FONT : &'static str = "arial";
+pub const FIGURE_FONT : &'static str = "sans-serif";
 
 pub const HTML_TEMPLATE : &'static str = include_str!("../ressources/static.html");

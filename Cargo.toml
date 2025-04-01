@@ -25,7 +25,7 @@ log = "0.4.20"
 test-log = "0.2.14"
 
 # plot
-plotters = "0.3.3"
+plotters = {version = "0.3.3", features = ["ttf"]}
 paste = "1.0.14" # concatenate macro identifier
 
 approx = "0.5.1"

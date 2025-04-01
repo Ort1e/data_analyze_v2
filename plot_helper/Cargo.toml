@@ -3,10 +3,13 @@ name = "plot_helper"
 version = "0.1.0"
 edition = "2021"
 
+[package.metadata.docs.rs]
+targets = ["wasm32-unknown-unknown", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-apple-darwin"]
+
+
 [features]
 parrallelize = ["dep:rayon"] # add rayon to dependencies to parallelize
 sqlite = ["dep:sqlite"] # add sqlite to dependencies to use sqlite
-
 
 
 [package.metadata]
