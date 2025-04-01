@@ -1,3 +1,5 @@
+
+
 use std::fs;
 use std::path::Path;
 
@@ -5,7 +7,9 @@ use plot_helper::data::filtering::{Filter, Filters};
 use plot_helper::data::sample_serie::file_sample_serie::FileSampleSerie;
 use plot_helper::data::sample_serie::memory_sample_serie::MemorySampleSerie;
 use plot_helper::plotter::layout::Layout;
+#[cfg(all(not(target_arch = "wasm32")))]
 use plot_helper::plotter::line_plot::line_plot;
+#[cfg(all(not(target_arch = "wasm32")))]
 use plot_helper::plotter::scatter_plot::scatter_plot;
 use plot_helper::stat::stats_serie::MetricName;
 use series::data::file_sample_test::FileTestSample;
@@ -21,6 +25,7 @@ const FILE_SAMPLES_DIR_PATH : &'static str = "tests/ressources/file_samples/";
 const OUPUT_DIR_PATH : &'static str = "tests/ressources/output/";
 
 #[test]
+#[cfg(all(not(target_arch = "wasm32")))]
 fn memory_sample_test() {
 
     let output_scatter_file_path = Path::new(OUPUT_DIR_PATH).join("memory_sample_scatter_test.png");

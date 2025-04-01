@@ -1,10 +1,7 @@
 use std::collections::HashMap;
-use std::io::Write;
-use std::path::Path;
-
-use plotters::backend::{BitMapBackend, PixelFormat, RGBPixel};
 use plotters::chart::ChartBuilder;
 use plotters::drawing::IntoDrawingArea;
+use plotters::prelude::{DrawingAreaErrorKind, DrawingBackend};
 use plotters::series::LineSeries;
 use plotters::style::{Color, IntoFont, Palette, PaletteColor, WHITE};
 
@@ -12,7 +9,7 @@ use crate::data::filtering::Filters;
 use crate::data::plottable::PlottableIterator;
 use crate::data::sample::key::SerieKey;
 use crate::data::sample::Sample;
-use crate::params::{FIGURE_CAPTION_FONT_SIZE, LABEL_HORIZONTAL_SIZE};
+use crate::params::{FIGURE_CAPTION_FONT_SIZE, FIGURE_FONT, LABEL_HORIZONTAL_SIZE};
 use crate::stat::stats_serie::MetricName;
 
 use super::get_global_size;
@@ -27,6 +24,7 @@ use super::utils::{format_number_f32, write_legend, CustomPalette};
 /// NOTE : the number of series to plot must be equal to the number of subplots
 /// NOTE : If remove_outliers is Some, the outliers will be removed from the data with the given key
 /// NOTE : The aggregation_metrics is the metric used to aggregate the data with the same x value
+#[cfg(all(not(target_arch = "wasm32")))]
 pub fn line_plot<'a, S, Key, IntoIter>(
     data : &'a IntoIter, 
     legend_serie_key : Option<Key>,
@@ -43,24 +41,23 @@ where
     S : Sample<Key>,
     &'a IntoIter : IntoIterator<Item = S>
 {
+    use std::path::Path;
+    use plotters::backend::BitMapBackend;
     // initialise the plotter
     let (w, h) = get_global_size(layout);
     let image_path_o = Path::new(save_path);
-    let mut file = std::fs::File::create(image_path_o)?;
-    let mut buffer = vec![0; (w * h * RGBPixel::PIXEL_SIZE as u32) as usize];
+    let root_drawing_area = BitMapBackend::new(&image_path_o, (w, h));
 
 
-    line_plot_with_buffer(
+    line_plot_with_backend(
         data, 
         legend_serie_key, 
-        &mut buffer, 
+        root_drawing_area, 
         layout, 
         series, 
         remove_outlier, 
         aggregation_metric
     )?;
-
-    file.write_all(&buffer)?;
 
     Ok(())
 }
@@ -68,21 +65,22 @@ where
 
 
 
-pub fn line_plot_with_buffer<'a, S, Key, IntoIter>(
+pub fn line_plot_with_backend<'a, S, Key, IntoIter, DB>(
     data : &'a IntoIter, 
     legend_serie_key : Option<Key>,
-    save_buffer : &mut [u8],
+    root_drawing_area : DB,
     layout : &Layout,
 
     series : Vec<(Key, Option<Key>, Option<&Filters<Key>>)>,
     
     remove_outlier : bool,
     aggregation_metric : MetricName,
-) -> Result<(), Box<dyn std::error::Error>> 
+) -> Result<(), DrawingAreaErrorKind<DB::ErrorType>> 
 where
     Key : SerieKey,
     S : Sample<Key>,
-    &'a IntoIter : IntoIterator<Item = S>
+    &'a IntoIter : IntoIterator<Item = S>,
+    DB : DrawingBackend,
 {
     if series.len() != layout.get_nb_of_subplots() {
         panic!("The number of series to plot ({}) is not equal to the number of subplots ({})", series.len(), layout.get_nb_of_subplots());
@@ -93,7 +91,7 @@ where
     let global_size = get_global_size(layout);
 
     // global drawing
-    let root_drawing_area = BitMapBackend::with_buffer(save_buffer, global_size).into_drawing_area();
+    let root_drawing_area = root_drawing_area.into_drawing_area();
     root_drawing_area.fill(&WHITE)?;
     // isolate the label area
     let (chart_drawing_area, label_drawing_area) = 
@@ -128,7 +126,7 @@ where
 
         let caption = format!("{} per {}", y_serie_name, x_serie_key.get_display_name());
         let mut chart = ChartBuilder::on(&root)
-            .caption(caption.as_str(), ("sans-serif", FIGURE_CAPTION_FONT_SIZE).into_font())
+            .caption(caption.as_str(), (FIGURE_FONT, FIGURE_CAPTION_FONT_SIZE).into_font())
             .margin(5)
             .x_label_area_size(40)
             .y_label_area_size(60)

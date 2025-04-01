@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use plotters::backend::BitMapBackend;
 use plotters::chart::{ChartBuilder, SeriesLabelPosition};
 use plotters::coord::Shift;
 use plotters::drawing::DrawingArea;
 use plotters::element::Circle;
+use plotters::prelude::{DrawingAreaErrorKind, DrawingBackend};
 use plotters::style::{Color, Palette, PaletteColor, RGBColor, BLACK, WHITE};
 
 use crate::data::sample::key::SerieKey;
@@ -46,13 +46,14 @@ impl Palette for CustomPalette {
 
 
 /// draw the legend on the given drawing area
-pub(crate) fn write_legend<Key> (
-    label_drawing_area: &DrawingArea<BitMapBackend<'_>, Shift>,
+pub(crate) fn write_legend<'a, Key, DB> (
+    label_drawing_area: &DrawingArea<DB, Shift>,
     legend_to_color : &HashMap<String, PaletteColor<CustomPalette>>,
     legend_serie_key : &Option<Key>
-) -> Result<(), Box<dyn std::error::Error>>
+) -> Result<(), DrawingAreaErrorKind<DB::ErrorType>>
 where 
     Key : SerieKey,
+    DB : DrawingBackend,
 {
     // draw the legend on a fantome chart
     let mut label_chart = 

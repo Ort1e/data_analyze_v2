@@ -10,7 +10,6 @@ pub struct Commands<K>
 where
 K: SerieKey,
 {
-    changed: bool,
     x_axis: Option<K>,
     y_axis: Option<K>,
 }
@@ -21,14 +20,12 @@ K: SerieKey,
 {
     pub fn new(x_axis: Option<K>, y_axis: Option<K>) -> Self {
         Commands {
-            changed: false,
             x_axis,
             y_axis,
         }
     }
 
-    pub fn display_in_ui(&self, ui : &mut Ui) -> Self {
-        let mut commands = self.clone();
+    pub fn display_in_ui(&mut self, ui : &mut Ui) {
         ui.horizontal(|ui| {
             // ----------------------------- graph basis -----------------------------
             ui.vertical(|ui| {
@@ -41,7 +38,7 @@ K: SerieKey,
                         .show_ui(ui, |ui| {
                             for k in K::get_possible_values() {
                                 if k.is_numeric() {
-                                    ui.selectable_value(&mut commands.x_axis, Some(k), format!("{}", k));
+                                    ui.selectable_value(&mut self.x_axis, Some(k), format!("{}", k));
                                 }
                             }
                         }
@@ -57,7 +54,7 @@ K: SerieKey,
                         .show_ui(ui, |ui| {
                             for k in K::get_possible_values() {
                                 if k.is_numeric() {
-                                    ui.selectable_value(&mut commands.y_axis, Some(k), format!("{}", k));
+                                    ui.selectable_value(&mut self.y_axis, Some(k), format!("{}", k));
                                 }
                             }
                         }
@@ -65,19 +62,6 @@ K: SerieKey,
                 });
             });
         });
-
-
-        commands.changed = self != &commands;
-
-        commands
-    }
-
-    pub fn has_changed(&mut self) {
-        self.changed = true;
-    }
-
-    pub fn is_changed(&self) -> bool {
-        self.changed
     }
 
     pub fn get_x_axis(&self) -> Option<K> {
@@ -86,9 +70,7 @@ K: SerieKey,
 
     pub fn get_y_axis(&self) -> Option<K> {
         self.y_axis
-    }
-
-    
+    }    
 }
 
 impl<K> Default for Commands<K> 
@@ -99,7 +81,6 @@ K: SerieKey,
         Commands {
             x_axis: None,
             y_axis: None,
-            changed: false,
         }
     }
 }

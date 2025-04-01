@@ -19,6 +19,8 @@ eframe = { version = "0.30", default-features = false, features = [
     "persistence",   # Enable restoring app state when restarting the app.
     "wayland",       # To support Linux (and CI)
 ] }
+
+plotters = {workspace = true}
 log = "0.4"
 
 # You only need serde if you want app persistence:
