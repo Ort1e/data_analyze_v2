@@ -36,7 +36,7 @@ fn main() {
             .start(
                 canvas,
                 web_options,
-                Box::new(|cc| Ok(Box::new(dynamique_plot::MyApp::<>::new(cc, data)))),
+                Box::new(|cc| Ok(Box::new(dynamique_plot::MyApp::<>::new(cc, data, "graph_canvas_id".to_string())))),
             )
             .await;
 

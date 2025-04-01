@@ -1,4 +1,5 @@
-use egui::{ColorImage, FontData, FontDefinitions, FontFamily};
+use egui::{ColorImage, FontData, FontDefinitions, FontFamily, Frame, Image, Sense, Ui};
+use image::ImageDecoder;
 use log::info;
 use plot_helper::data::sample::key::SerieKey;
 use plot_helper::data::sample::Sample;
@@ -8,19 +9,27 @@ use plot_helper::plotter::layout::Layout;
 use plot_helper::plotter::scatter_plot::scatter_plot_with_backend;
 use plotters::backend::{PixelFormat, RGBPixel};
 use plotters::prelude::BitMapBackend;
+use plotters_canvas::CanvasBackend;
+use wasm_rs_dbg::dbg;
+
+use image::codecs::png::PngDecoder;
+
 
 use crate::commands::Commands;
+#[cfg(target_arch = "wasm32")]
+use crate::get_canvas;
 
 
-
+/// The main application state
 pub struct MyApp<S, K>
 where
     S: Sample<K>,
     K: SerieKey,
 {
-    graph : egui::TextureHandle,
+    graph_texture: egui::TextureHandle,
+    graph_canvas_id : String,
     graph_size : (usize, usize),
-    pixels_cached : Option<Vec<u8>>,
+    graph_cached : Option<Vec<u8>>,
 
     data: MemorySampleSerie<S, K>,
     command: Commands<K>,
@@ -32,7 +41,8 @@ where
     K: SerieKey,
 {
     /// Called once before the first frame.
-    pub fn new(cc: &eframe::CreationContext<'_>, data : MemorySampleSerie<S, K>) -> Self {
+    /// - graph_canvas_id : the id of the canvas where the graph will be drawn (the canvas must be in the html file, hidden)
+    pub fn new(cc: &eframe::CreationContext<'_>, data : MemorySampleSerie<S, K>, graph_canvas_id : String) -> Self {
         // This is also where you can customize the look and feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
  
@@ -65,15 +75,16 @@ where
 
         let (w, h) = get_global_size(&Layout::new(1, 1));
 
-        Self { 
-            data: data,
-            graph: cc.egui_ctx.load_texture(
-                "graph",
+        Self {
+            graph_texture: cc.egui_ctx.load_texture(
+                "graph_texture",
                 egui::ColorImage::example(),
                 egui::TextureOptions::NEAREST,
             ),
+            data: data,
+            graph_canvas_id,
             graph_size: (w as usize, h as usize),
-            pixels_cached: None,
+            graph_cached: None,
             command: Commands::default(),
         }
     }
@@ -81,13 +92,7 @@ where
 
     fn draw_graph(&mut self) {
         // see https://github.com/bluurryy/noise-functions-demo/blob/e23b3eb6cb670412f0433fb06fcd9f97cc43e221/src/app.rs#L420
-        let mut buffer = vec![0; self.graph_size.0 * self.graph_size.1 * RGBPixel::PIXEL_SIZE];
-
-        let backend = BitMapBackend::with_buffer(
-            &mut buffer,
-            (self.graph_size.0 as u32, self.graph_size.1 as u32),
-        );
-
+        let backend = CanvasBackend::new(&self.graph_canvas_id).unwrap();
 
         scatter_plot_with_backend(
             &self.data, 
@@ -99,23 +104,23 @@ where
             ], 
             false
         ).expect("Error while plotting the graph");
+        
+        let canvas = get_canvas(&self.graph_canvas_id);
+        let image_str = canvas.to_data_url().unwrap();
+        dbg!("image_str : {}", &image_str);
+        let image = Image::new(image_str);
 
-        let texture = &mut self.graph;
-
-        texture.set(
+        self.graph_texture.set(
             ColorImage::from_rgba_premultiplied(
                 [self.graph_size.0, self.graph_size.1],
                 &buffer,
             ),
             egui::TextureOptions::NEAREST,
         );
-        
-        self.pixels_cached = Some(buffer);
-
     }
 
     fn is_graph_drawn(&self) -> bool {
-        self.pixels_cached.is_some()
+        self.graph_cached.is_some()
     }
 }
 
@@ -165,7 +170,9 @@ where
                 ui.separator();
 
                 if self.is_graph_drawn() {
-
+                    let size = self.graph_texture.size_vec2();
+                    let sized_texture = egui::load::SizedTexture::new(self.graph_texture.id(), size);
+                    ui.add(egui::Image::new(sized_texture).fit_to_exact_size(size));
                 } else {
                     ui.label("No graph to display");
                 }

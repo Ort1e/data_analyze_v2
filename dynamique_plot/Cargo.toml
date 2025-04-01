@@ -21,7 +21,10 @@ eframe = { version = "0.30", default-features = false, features = [
 ] }
 
 plotters = {workspace = true}
+plotters-canvas = {workspace = true}
 log = "0.4"
+
+image = {workspace = true}
 
 # You only need serde if you want app persistence:
 serde = { version = "1", features = ["derive"] }
@@ -33,5 +36,6 @@ env_logger = "0.11"
 # web:
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures = "0.4"
-web-sys = "0.3.70"           # to access the DOM (to hide the loading text)
+web-sys = {workspace = true}           # to access the DOM (to hide the loading text)
+wasm-rs-dbg = {workspace = true}       # to log to the browser console
 

@@ -25,10 +25,16 @@ log = "0.4.20"
 test-log = "0.2.14"
 
 # plot
-plotters = {version = "0.3.3", features = ["ttf"]}
+plotters = "0.3.3"
+plotters-canvas = "^0.3.0"
+web-sys = { version = "0.3.70", features = ["HtmlCanvasElement"] }
 paste = "1.0.14" # concatenate macro identifier
 
 approx = "0.5.1"
+
+image = "0.25.6"
+
+wasm-rs-dbg = "0.1.2"
 
 [profile.release]
 opt-level = 2 # fast and small wasm
