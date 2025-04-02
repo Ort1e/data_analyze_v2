@@ -19,8 +19,7 @@ use wasm_rs_dbg::dbg;
 
 
 use crate::commands::graph_commands::{GraphCommands, GraphType};
-use crate::{create_canvas, update_canvas_style};
-use crate::remove_canvas;
+use crate::{create_canvas, update_canvas_style, remove_canvas, toggle_ui};
 #[cfg(target_arch = "wasm32")]
 use crate::get_canvas;
 
@@ -119,7 +118,7 @@ where
             GraphType::Scatter => {
                 scatter_plot_with_backend(
                     &self.data, 
-                    None, 
+                    self.command.get_legend(), 
                     backend, 
                     &Layout::new(1, 1),
                     vec![
@@ -131,7 +130,7 @@ where
             GraphType::Line(metric) => {
                 line_plot_with_backend(
                     &self.data, 
-                    None, 
+                    self.command.get_legend(), 
                     backend, 
                     &Layout::new(1, 1),
                     vec![
@@ -190,14 +189,27 @@ where
             // "number of sample" at the top of the screen
             ui.vertical(|ui| {
                 ui.label(format!("Number of samples : {}", self.data.nb_samples()));
+                ui.separator();
                 // ------------------ toolbar ------------------
-                self.command.display_in_ui(ui);
+                let should_redraw = self.command.display_in_ui(ui);
+
+                // ------------------ graph control ------------------
+
                 ui.separator();
                 ui.heading("Graph :");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                    if ui.button("Draw graph").clicked() {
-                        self.draw_graph();
-                    }
+                    if self.command.get_automatic_redraw() {
+                        if should_redraw {
+                            self.draw_graph();
+                        }
+                    } else {
+                        if ui.button("Draw graph").clicked() {
+                            self.draw_graph();
+                        }
+                    } 
+
+                    toggle_ui(ui, self.command.get_mut_automatic_redraw());
+                    ui.label("Automatically redraw the graph :");
                 });
 
                 if !self.is_graph_drawn() {

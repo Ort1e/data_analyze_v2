@@ -69,26 +69,50 @@ K: SerieKey,
 {
     x_axis: Option<K>,
     y_axis: Option<K>,
+    legend: Option<K>,
     graph_type: GraphType,
+
+    automatic_redraw: bool,
 }
 
 impl<K> GraphCommands<K>
 where
 K: SerieKey,
 {
-    pub fn new(x_axis: Option<K>, y_axis: Option<K>, graph_type : GraphType) -> Self {
+    pub fn new(x_axis: Option<K>, y_axis: Option<K>, legend : Option<K>, graph_type : GraphType, automatic_redraw : bool) -> Self {
         GraphCommands {
             x_axis,
             y_axis,
+            legend,
             graph_type,
+            automatic_redraw
         }
     }
 
-    pub fn display_in_ui(&mut self, ui : &mut Ui) {
+    /// return true if the command has changed
+    pub fn display_in_ui(&mut self, ui : &mut Ui) -> bool{
+        let old_self = self.clone();
+
         ui.horizontal(|ui| {
             // ----------------------------- graph basis -----------------------------
             ui.vertical(|ui| {
-            // x axis
+                // legend
+                ui.horizontal(|ui| {
+                    ui.label("Legend :");
+
+                    egui::ComboBox::from_label("Select legend!")
+                        .selected_text(format!("{}", get_str_from_opt_key(&self.legend)))
+                        .show_ui(ui, |ui| {
+                            for k in K::get_possible_values() {
+                                if k.is_string() {
+                                    ui.selectable_value(&mut self.legend, Some(k), format!("{}", k));
+                                }
+                            }
+                            ui.selectable_value(&mut self.legend, None, "None");
+                        }
+                    );
+                });
+                // x axis
                 ui.horizontal(|ui| {
                     ui.label("X axis :");
 
@@ -115,6 +139,7 @@ K: SerieKey,
                                     ui.selectable_value(&mut self.y_axis, Some(k), format!("{}", k));
                                 }
                             }
+                            ui.selectable_value(&mut self.y_axis, None, "None");
                         }
                     );
                 });
@@ -125,6 +150,8 @@ K: SerieKey,
             // ----------------------------- graph type -----------------------------
             self.graph_type.display_in_ui(ui);
         });
+
+        self != &old_self
     }
 
     pub fn get_x_axis(&self) -> Option<K> {
@@ -137,7 +164,19 @@ K: SerieKey,
 
     pub fn get_graph_type(&self) -> GraphType {
         self.graph_type
-    } 
+    }
+
+    pub fn get_legend(&self) -> Option<K> {
+        self.legend
+    }
+
+    pub fn get_mut_automatic_redraw(&mut self) -> &mut bool {
+        &mut self.automatic_redraw
+    }
+
+    pub fn get_automatic_redraw(&self) -> bool {
+        self.automatic_redraw
+    }
 }
 
 impl<K> Default for GraphCommands<K> 
@@ -148,7 +187,9 @@ K: SerieKey,
         GraphCommands {
             x_axis: None,
             y_axis: None,
+            legend: None,
             graph_type: GraphType::default(),
+            automatic_redraw: false,
         }
     }
 }
