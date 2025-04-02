@@ -1,6 +1,7 @@
 use egui::Ui;
 use plot_helper::data::sample::key::SerieKey;
 use plot_helper::stat::stats_serie::MetricName;
+use wasm_rs_dbg::dbg;
 
 use crate::app::get_str_from_opt_key;
 
@@ -20,18 +21,15 @@ impl Default for GraphType {
 
 impl GraphType {
     pub fn display_in_ui(&mut self, ui : &mut Ui) {
-        ui.vertical(|ui| {
-            ui.label("Graph type :");
+        ui.horizontal(|ui| {
             egui::ComboBox::from_label("Select graph type!")
                 .selected_text(format!("{}", self.get_display_type()))
                 .show_ui(ui, |ui| {
                     ui.selectable_value(self, GraphType::Scatter, "Scatter");
                     ui.selectable_value(self, GraphType::Line(MetricName::Mean), "Line");
                 });
-
             match self {
                 GraphType::Line(m) => {
-                    ui.label("Metric :");
                     egui::ComboBox::from_label("Select metric!")
                         .selected_text(format!("{}", m))
                         .show_ui(ui, |ui| {
@@ -64,13 +62,12 @@ impl GraphType {
 
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GraphCommands<K>
 where
 K: SerieKey,
 {
-    x_axis: Option<K>,
-    y_axis: Option<K>,
+    axis : Vec<(Option<K>, Option<K>)>,
     legend: Option<K>,
     graph_type: GraphType,
     outlier: bool,
@@ -81,93 +78,101 @@ impl<K> GraphCommands<K>
 where
 K: SerieKey,
 {
-    pub fn new(x_axis: Option<K>, y_axis: Option<K>, legend : Option<K>, graph_type : GraphType, outlier : bool) -> Self {
-        GraphCommands {
-            x_axis,
-            y_axis,
-            legend,
-            graph_type,
-            outlier,
-        }
-    }
-
     /// return true if the command has changed
     pub fn display_in_ui(&mut self, ui : &mut Ui) -> bool{
         let old_self = self.clone();
 
-        ui.horizontal(|ui| {
+        ui.vertical(|ui| {
             // ----------------------------- graph basis -----------------------------
-            ui.vertical(|ui| {
-                // legend
-                ui.horizontal(|ui| {
-                    ui.label("Legend :");
-
-                    egui::ComboBox::from_label("Select legend!")
-                        .selected_text(format!("{}", get_str_from_opt_key(&self.legend)))
-                        .show_ui(ui, |ui| {
-                            for k in K::get_possible_values() {
-                                if k.is_string() {
-                                    ui.selectable_value(&mut self.legend, Some(k), format!("{}", k));
-                                }
-                            }
-                            ui.selectable_value(&mut self.legend, None, "None");
-                        }
-                    );
-                });
-                // x axis
-                ui.horizontal(|ui| {
-                    ui.label("X axis :");
-
-                    egui::ComboBox::from_label("Select X axis!")
-                        .selected_text(format!("{}", get_str_from_opt_key(&self.x_axis)))
-                        .show_ui(ui, |ui| {
-                            for k in K::get_possible_values() {
-                                if k.is_numeric() {
-                                    ui.selectable_value(&mut self.x_axis, Some(k), format!("{}", k));
-                                }
+            // Base of the graph
+            ui.heading("Graph basis : ");
+            ui.horizontal(|ui| {
+                egui::ComboBox::from_label("Select legend!")
+                    .selected_text(format!("{}", get_str_from_opt_key(&self.legend)))
+                    .show_ui(ui, |ui| {
+                        for k in K::get_possible_values() {
+                            if k.is_string() {
+                                ui.selectable_value(&mut self.legend, Some(k), format!("{}", k));
                             }
                         }
-                    );
-                });
-                // y axis
-                ui.horizontal(|ui| {
-                    ui.label("Y axis :");
-
-                    egui::ComboBox::from_label("Select Y axis!")
-                        .selected_text(format!("{}", get_str_from_opt_key(&self.y_axis)))
-                        .show_ui(ui, |ui| {
-                            for k in K::get_possible_values() {
-                                if k.is_numeric() {
-                                    ui.selectable_value(&mut self.y_axis, Some(k), format!("{}", k));
-                                }
-                            }
-                            ui.selectable_value(&mut self.y_axis, None, "None");
-                        }
-                    );
-                });
-            });
-
-            ui.separator();
-            // ----------------------------- outlier -----------------------------
-            ui.vertical(|ui| {
+                        ui.selectable_value(&mut self.legend, None, "None");
+                    }
+                );
+                // ----------------------------- graph type -----------------------------
+                ui.separator();
+                self.graph_type.display_in_ui(ui);
+               
+                // ----------------------------- outlier -----------------------------
+                ui.separator();
+                
                 ui.label("Outlier :");
                 toggle_ui(ui, &mut self.outlier);
+
             });
 
-            // ----------------------------- graph type -----------------------------
             ui.separator();
-            self.graph_type.display_in_ui(ui);
+
+            // each drawn
+            ui.heading("Graph axis : ");
+            self.draw_axis(ui);
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                if ui.button("Add".to_string()).clicked() {
+                    self.axis.push((None, None));
+                }
+
+                if self.axis.len() > 1 {
+                    if ui.button("remove".to_string()).clicked() {
+                        self.axis.pop();
+                    }
+                }
+            });
         });
 
         self != &old_self
     }
 
-    pub fn get_x_axis(&self) -> Option<K> {
-        self.x_axis
+    pub fn draw_axis(&mut self, ui : &mut Ui) {
+        for (n, (x_axis, y_axis)) in self.axis.iter_mut().enumerate() {
+            ui.horizontal(|ui| {
+                // x axis
+                egui::ComboBox::from_label(format!("Select X axis for {}", n + 1))
+                    .selected_text(format!("{}", get_str_from_opt_key(x_axis)))
+                    .show_ui(ui, |ui| {
+                        for k in K::get_possible_values() {
+                            if k.is_numeric() {
+                                ui.selectable_value(x_axis, Some(k), format!("{}", k));
+                            }
+                        }
+                    }
+                );
+                ui.separator();
+                // y axis
+                egui::ComboBox::from_label(format!("Select Y axis for {}", n + 1))
+                    .selected_text(format!("{}", get_str_from_opt_key(y_axis)))
+                    .show_ui(ui, |ui| {
+                        for k in K::get_possible_values() {
+                            if k.is_numeric() {
+                                ui.selectable_value(y_axis, Some(k), format!("{}", k));
+                            }
+                        }
+                        ui.selectable_value(y_axis, None, "None");
+                    }
+                );
+            });
+            ui.separator();
+        }
     }
 
-    pub fn get_y_axis(&self) -> Option<K> {
-        self.y_axis
+    pub fn get_axis(&self) -> &Vec<(Option<K>, Option<K>)> {
+        &self.axis
+    }
+
+    pub fn get_n_axis(&self, n : usize) -> (Option<K>, Option<K>) {
+        self.axis[n]
+    }
+
+    pub fn get_mut_n_axis(&mut self, n : usize) -> &mut (Option<K>, Option<K>) {
+        self.axis.get_mut(n).unwrap()
     }
 
     pub fn get_graph_type(&self) -> GraphType {
@@ -189,8 +194,7 @@ K: SerieKey,
 {
     fn default() -> Self {
         GraphCommands {
-            x_axis: None,
-            y_axis: None,
+            axis: vec![(None, None)],
             legend: None,
             graph_type: GraphType::default(),
             outlier: false,

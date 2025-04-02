@@ -5,6 +5,7 @@ use egui::load::Bytes;
 use egui::{popup, ColorImage, FontData, FontDefinitions, FontFamily, Frame, Ui};
 use base64::prelude::{BASE64_STANDARD, Engine as _};
 use log::info;
+use plot_helper::data::filtering::Filters;
 use plot_helper::data::sample::key::SerieKey;
 use plot_helper::data::sample::Sample;
 use plot_helper::data::sample_serie::memory_sample_serie::MemorySampleSerie;
@@ -106,15 +107,29 @@ where
         self.graph_cached = None;
         self.drawn_error = None;
 
-        // check if the x axis is set
-        if self.command.get_x_axis().is_none() {
-            self.drawn_error = Some("The x axis is not set".to_string());
-            return;
+        // prepare the series
+        let mut series: Vec<(K, Option<K>, Option<&Filters<K>>)> = Vec::new();
+        
+        for (i, (x_axis, y_axis)) in self.command.get_axis().iter().enumerate() {
+            if x_axis.is_none() {
+                self.drawn_error = Some(format!("No x axis selected for graph part {}", i + 1));
+                return;
+            }
+
+            series.push((x_axis.unwrap().clone(), y_axis.clone(), None));
+        }
+
+        let layout = Layout::new(1, series.len());
+        {
+            let (w, h) = get_global_size(&layout);
+            self.graph_size = (w as usize, h as usize);
         }
 
         let canvas = create_canvas(GRAPH_CANVAS_ID, self.graph_size.0, self.graph_size.1);
 
         let backend = CanvasBackend::with_canvas_object(canvas).unwrap();
+
+        
 
         match self.command.get_graph_type() {
             GraphType::Scatter => {
@@ -122,10 +137,8 @@ where
                     &self.data, 
                     self.command.get_legend(), 
                     backend, 
-                    &Layout::new(1, 1),
-                    vec![
-                        (self.command.get_x_axis().unwrap(), self.command.get_y_axis(), None)
-                    ], 
+                    &layout,
+                    series, 
                     self.command.get_outlier(),
                 ).expect("Error while plotting the graph");
             },
@@ -134,10 +147,8 @@ where
                     &self.data, 
                     self.command.get_legend(), 
                     backend, 
-                    &Layout::new(1, 1),
-                    vec![
-                        (self.command.get_x_axis().unwrap(), self.command.get_y_axis(), None)
-                    ], 
+                    &layout,
+                    series, 
                     self.command.get_outlier(),
                     metric
                 ).expect("Error while plotting the graph");
