@@ -4,6 +4,8 @@ use plot_helper::stat::stats_serie::MetricName;
 
 use crate::app::get_str_from_opt_key;
 
+use crate::toggle_ui;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GraphType {
     Line(MetricName),
@@ -71,21 +73,21 @@ K: SerieKey,
     y_axis: Option<K>,
     legend: Option<K>,
     graph_type: GraphType,
-
-    automatic_redraw: bool,
+    outlier: bool,
+    
 }
 
 impl<K> GraphCommands<K>
 where
 K: SerieKey,
 {
-    pub fn new(x_axis: Option<K>, y_axis: Option<K>, legend : Option<K>, graph_type : GraphType, automatic_redraw : bool) -> Self {
+    pub fn new(x_axis: Option<K>, y_axis: Option<K>, legend : Option<K>, graph_type : GraphType, outlier : bool) -> Self {
         GraphCommands {
             x_axis,
             y_axis,
             legend,
             graph_type,
-            automatic_redraw
+            outlier,
         }
     }
 
@@ -146,8 +148,14 @@ K: SerieKey,
             });
 
             ui.separator();
+            // ----------------------------- outlier -----------------------------
+            ui.vertical(|ui| {
+                ui.label("Outlier :");
+                toggle_ui(ui, &mut self.outlier);
+            });
 
             // ----------------------------- graph type -----------------------------
+            ui.separator();
             self.graph_type.display_in_ui(ui);
         });
 
@@ -170,12 +178,8 @@ K: SerieKey,
         self.legend
     }
 
-    pub fn get_mut_automatic_redraw(&mut self) -> &mut bool {
-        &mut self.automatic_redraw
-    }
-
-    pub fn get_automatic_redraw(&self) -> bool {
-        self.automatic_redraw
+    pub fn get_outlier(&self) -> bool {
+        self.outlier
     }
 }
 
@@ -189,7 +193,7 @@ K: SerieKey,
             y_axis: None,
             legend: None,
             graph_type: GraphType::default(),
-            automatic_redraw: false,
+            outlier: false,
         }
     }
 }

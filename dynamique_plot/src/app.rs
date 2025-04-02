@@ -37,6 +37,7 @@ where
     graph_cached : Option<Vec<u8>>,
     
     drawn_error : Option<String>,
+    automatic_redraw: bool,
 
     data: MemorySampleSerie<S, K>,
     command: GraphCommands<K>,
@@ -91,6 +92,7 @@ where
             graph_cached: None,
             drawn_error: None,
             command: GraphCommands::default(),
+            automatic_redraw: false,
         }
     }
 
@@ -124,7 +126,7 @@ where
                     vec![
                         (self.command.get_x_axis().unwrap(), self.command.get_y_axis(), None)
                     ], 
-                    false
+                    self.command.get_outlier(),
                 ).expect("Error while plotting the graph");
             },
             GraphType::Line(metric) => {
@@ -136,7 +138,7 @@ where
                     vec![
                         (self.command.get_x_axis().unwrap(), self.command.get_y_axis(), None)
                     ], 
-                    false,
+                    self.command.get_outlier(),
                     metric
                 ).expect("Error while plotting the graph");
             },
@@ -158,6 +160,10 @@ where
 
     fn is_graph_drawn(&self) -> bool {
         self.graph_cached.is_some()
+    }
+
+    fn is_automatic_redraw(&self) -> bool {
+        self.automatic_redraw
     }
 }
 
@@ -198,7 +204,7 @@ where
                 ui.separator();
                 ui.heading("Graph :");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                    if self.command.get_automatic_redraw() {
+                    if self.is_automatic_redraw() {
                         if should_redraw {
                             self.draw_graph();
                         }
@@ -208,7 +214,7 @@ where
                         }
                     } 
 
-                    toggle_ui(ui, self.command.get_mut_automatic_redraw());
+                    toggle_ui(ui, &mut self.automatic_redraw);
                     ui.label("Automatically redraw the graph :");
                 });
 
@@ -236,7 +242,6 @@ where
             update_canvas_style(GRAPH_CANVAS_ID, self.graph_size.0, self.graph_size.1, (total_height as usize, 0));
         }
     }
-
 
     
 }
