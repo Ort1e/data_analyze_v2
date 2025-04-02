@@ -1,5 +1,9 @@
-use egui::{ColorImage, FontData, FontDefinitions, FontFamily, Frame, Image, Sense, Ui};
-use image::ImageDecoder;
+use std::sync::Arc;
+
+use egui::load::Bytes;
+
+use egui::{ColorImage, FontData, FontDefinitions, FontFamily, Frame, Image, ImageSource, Sense, Ui};
+use base64::prelude::{BASE64_STANDARD, Engine as _};
 use log::info;
 use plot_helper::data::sample::key::SerieKey;
 use plot_helper::data::sample::Sample;
@@ -12,10 +16,10 @@ use plotters::prelude::BitMapBackend;
 use plotters_canvas::CanvasBackend;
 use wasm_rs_dbg::dbg;
 
-use image::codecs::png::PngDecoder;
-
 
 use crate::commands::Commands;
+use crate::create_canvas;
+use crate::remove_canvas;
 #[cfg(target_arch = "wasm32")]
 use crate::get_canvas;
 
@@ -26,8 +30,6 @@ where
     S: Sample<K>,
     K: SerieKey,
 {
-    graph_texture: egui::TextureHandle,
-    graph_canvas_id : String,
     graph_size : (usize, usize),
     graph_cached : Option<Vec<u8>>,
 
@@ -42,7 +44,7 @@ where
 {
     /// Called once before the first frame.
     /// - graph_canvas_id : the id of the canvas where the graph will be drawn (the canvas must be in the html file, hidden)
-    pub fn new(cc: &eframe::CreationContext<'_>, data : MemorySampleSerie<S, K>, graph_canvas_id : String) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>, data : MemorySampleSerie<S, K>) -> Self {
         // This is also where you can customize the look and feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
  
@@ -71,18 +73,15 @@ where
             cc.egui_ctx.set_fonts(fonts);
         }
 
+        egui_extras::install_image_loaders(&cc.egui_ctx);
+
         
 
         let (w, h) = get_global_size(&Layout::new(1, 1));
+        
 
         Self {
-            graph_texture: cc.egui_ctx.load_texture(
-                "graph_texture",
-                egui::ColorImage::example(),
-                egui::TextureOptions::NEAREST,
-            ),
             data: data,
-            graph_canvas_id,
             graph_size: (w as usize, h as usize),
             graph_cached: None,
             command: Commands::default(),
@@ -92,7 +91,12 @@ where
 
     fn draw_graph(&mut self) {
         // see https://github.com/bluurryy/noise-functions-demo/blob/e23b3eb6cb670412f0433fb06fcd9f97cc43e221/src/app.rs#L420
-        let backend = CanvasBackend::new(&self.graph_canvas_id).unwrap();
+
+        let graph_canvas_id = "graph_canvas";        
+
+        let canvas = create_canvas(graph_canvas_id, self.graph_size.0, self.graph_size.1);
+
+        let backend = CanvasBackend::with_canvas_object(canvas).unwrap();
 
         scatter_plot_with_backend(
             &self.data, 
@@ -105,18 +109,16 @@ where
             false
         ).expect("Error while plotting the graph");
         
-        let canvas = get_canvas(&self.graph_canvas_id);
-        let image_str = canvas.to_data_url().unwrap();
-        dbg!("image_str : {}", &image_str);
-        let image = Image::new(image_str);
+        let canvas = get_canvas(graph_canvas_id);
+        let image_str = canvas.to_data_url_with_type("image/png").unwrap()
+            .replace("data:image/png;base64,", "");
+        dbg!(&image_str);
 
-        self.graph_texture.set(
-            ColorImage::from_rgba_premultiplied(
-                [self.graph_size.0, self.graph_size.1],
-                &buffer,
-            ),
-            egui::TextureOptions::NEAREST,
-        );
+        remove_canvas(graph_canvas_id);
+
+        let image_bytes = BASE64_STANDARD.decode(image_str).unwrap();
+
+        self.graph_cached = Some(image_bytes);
     }
 
     fn is_graph_drawn(&self) -> bool {
@@ -170,9 +172,9 @@ where
                 ui.separator();
 
                 if self.is_graph_drawn() {
-                    let size = self.graph_texture.size_vec2();
-                    let sized_texture = egui::load::SizedTexture::new(self.graph_texture.id(), size);
-                    ui.add(egui::Image::new(sized_texture).fit_to_exact_size(size));
+                    let bytes = self.graph_cached.as_ref().unwrap();
+                    let bytes: Bytes = Bytes::from(bytes.clone());
+                    ui.add(Image::from_bytes("bytes://my_graph.png", bytes));
                 } else {
                     ui.label("No graph to display");
                 }

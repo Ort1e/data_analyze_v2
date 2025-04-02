@@ -32,9 +32,21 @@ paste = "1.0.14" # concatenate macro identifier
 
 approx = "0.5.1"
 
-image = "0.25.6"
+base64 = "0.22.1"
 
 wasm-rs-dbg = "0.1.2"
+
+# egui
+egui_extras = { version = "0.31.1", features = ["all_loaders"] }
+image = { version = "0.25", features = ["png", "webp"] }
+egui = "0.31.1"
+eframe = { version = "0.31.1", default-features = false, features = [
+    "accesskit",     # Make egui compatible with screen readers. NOTE: adds a lot of dependencies.
+    "default_fonts", # Embed the default egui fonts.
+    "glow",          # Use the glow rendering backend. Alternative: "wgpu".
+    "persistence",   # Enable restoring app state when restarting the app.
+    "wayland",       # To support Linux (and CI)
+] }
 
 [profile.release]
 opt-level = 2 # fast and small wasm
