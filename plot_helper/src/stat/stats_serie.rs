@@ -166,4 +166,14 @@ impl MetricName {
             MetricName::StandardDeviation => "standard_deviation".to_string(),
         }
     }
+
+    pub fn get_all() -> Vec<MetricName> {
+        vec![
+            MetricName::Mean,
+            MetricName::Median,
+            MetricName::Additive,
+            MetricName::NbValues,
+            MetricName::StandardDeviation,
+        ]
+    }
 }

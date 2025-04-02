@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use egui::load::Bytes;
 
-use egui::{ColorImage, FontData, FontDefinitions, FontFamily, Frame, ImageSource, Sense, Ui};
+use egui::{popup, ColorImage, FontData, FontDefinitions, FontFamily, Frame, Ui};
 use base64::prelude::{BASE64_STANDARD, Engine as _};
 use log::info;
 use plot_helper::data::sample::key::SerieKey;
@@ -11,13 +11,14 @@ use plot_helper::data::sample_serie::memory_sample_serie::MemorySampleSerie;
 use plot_helper::plotter::get_global_size;
 use plot_helper::plotter::layout::Layout;
 use plot_helper::plotter::scatter_plot::scatter_plot_with_backend;
+use plot_helper::plotter::line_plot::line_plot_with_backend;
 use plotters::backend::{PixelFormat, RGBPixel};
 use plotters::prelude::BitMapBackend;
 use plotters_canvas::CanvasBackend;
 use wasm_rs_dbg::dbg;
 
 
-use crate::commands::Commands;
+use crate::commands::graph_commands::{GraphCommands, GraphType};
 use crate::{create_canvas, update_canvas_style};
 use crate::remove_canvas;
 #[cfg(target_arch = "wasm32")]
@@ -35,9 +36,11 @@ where
 {
     graph_size : (usize, usize),
     graph_cached : Option<Vec<u8>>,
+    
+    drawn_error : Option<String>,
 
     data: MemorySampleSerie<S, K>,
-    command: Commands<K>,
+    command: GraphCommands<K>,
 }
 
 impl<S, K> MyApp<S, K>
@@ -87,30 +90,60 @@ where
             data: data,
             graph_size: (w as usize, h as usize),
             graph_cached: None,
-            command: Commands::default(),
+            drawn_error: None,
+            command: GraphCommands::default(),
         }
     }
 
-
+    /// Draw the graph
+    /// Note : erase the previous graph
     fn draw_graph(&mut self) {
         // see https://github.com/bluurryy/noise-functions-demo/blob/e23b3eb6cb670412f0433fb06fcd9f97cc43e221/src/app.rs#L420
 
         // remove the previous canvas
         remove_canvas(GRAPH_CANVAS_ID);
+        self.graph_cached = None;
+        self.drawn_error = None;
+
+        // check if the x axis is set
+        if self.command.get_x_axis().is_none() {
+            self.drawn_error = Some("The x axis is not set".to_string());
+            return;
+        }
+
         let canvas = create_canvas(GRAPH_CANVAS_ID, self.graph_size.0, self.graph_size.1);
 
         let backend = CanvasBackend::with_canvas_object(canvas).unwrap();
 
-        scatter_plot_with_backend(
-            &self.data, 
-            None, 
-            backend, 
-            &Layout::new(1, 1),
-            vec![
-                (self.command.get_x_axis().unwrap(), self.command.get_y_axis(), None)
-            ], 
-            false
-        ).expect("Error while plotting the graph");
+        match self.command.get_graph_type() {
+            GraphType::Scatter => {
+                scatter_plot_with_backend(
+                    &self.data, 
+                    None, 
+                    backend, 
+                    &Layout::new(1, 1),
+                    vec![
+                        (self.command.get_x_axis().unwrap(), self.command.get_y_axis(), None)
+                    ], 
+                    false
+                ).expect("Error while plotting the graph");
+            },
+            GraphType::Line(metric) => {
+                line_plot_with_backend(
+                    &self.data, 
+                    None, 
+                    backend, 
+                    &Layout::new(1, 1),
+                    vec![
+                        (self.command.get_x_axis().unwrap(), self.command.get_y_axis(), None)
+                    ], 
+                    false,
+                    metric
+                ).expect("Error while plotting the graph");
+            },
+        };
+
+       
         
         let canvas = get_canvas(GRAPH_CANVAS_ID);
         let data_url_image_str = canvas.to_data_url_with_type(format!("image/{}", GRAPH_IMAGE_TYPE).as_str()).unwrap();
@@ -167,11 +200,13 @@ where
                     }
                 });
 
-                if self.is_graph_drawn() {
-                    
-                } else {
+                if !self.is_graph_drawn() {
                     ui.separator();
-                    ui.label("No graph to display");
+                    if let Some(e) = self.drawn_error.as_ref() {
+                        ui.label(format!("Error while drawing the graph : {}", e));
+                    } else {
+                        ui.label("No graph to display");
+                    }
                 }
 
             });
@@ -185,7 +220,7 @@ where
         });
 
         if self.is_graph_drawn() {
-            total_height += 30.0; // add some space for the image
+            total_height += 50.0; // add some space for the image
             update_canvas_style(GRAPH_CANVAS_ID, self.graph_size.0, self.graph_size.1, (total_height as usize, 0));
         }
     }
