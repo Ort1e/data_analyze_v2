@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use egui::load::Bytes;
 
-use egui::{ColorImage, FontData, FontDefinitions, FontFamily, Frame, Image, ImageSource, Sense, Ui};
+use egui::{ColorImage, FontData, FontDefinitions, FontFamily, Frame, ImageSource, Sense, Ui};
 use base64::prelude::{BASE64_STANDARD, Engine as _};
 use log::info;
 use plot_helper::data::sample::key::SerieKey;
@@ -18,13 +18,14 @@ use wasm_rs_dbg::dbg;
 
 
 use crate::commands::Commands;
-use crate::create_canvas;
+use crate::{create_canvas, update_canvas_style};
 use crate::remove_canvas;
 #[cfg(target_arch = "wasm32")]
 use crate::get_canvas;
 
 
 pub const GRAPH_IMAGE_TYPE: &str = "png";
+pub const GRAPH_CANVAS_ID: &str = "graph_canvas";
 
 /// The main application state
 pub struct MyApp<S, K>
@@ -33,7 +34,7 @@ where
     K: SerieKey,
 {
     graph_size : (usize, usize),
-    graph_cached : Option<String>,
+    graph_cached : Option<Vec<u8>>,
 
     data: MemorySampleSerie<S, K>,
     command: Commands<K>,
@@ -94,9 +95,9 @@ where
     fn draw_graph(&mut self) {
         // see https://github.com/bluurryy/noise-functions-demo/blob/e23b3eb6cb670412f0433fb06fcd9f97cc43e221/src/app.rs#L420
 
-        let graph_canvas_id = "graph_canvas";        
-
-        let canvas = create_canvas(graph_canvas_id, self.graph_size.0, self.graph_size.1);
+        // remove the previous canvas
+        remove_canvas(GRAPH_CANVAS_ID);
+        let canvas = create_canvas(GRAPH_CANVAS_ID, self.graph_size.0, self.graph_size.1);
 
         let backend = CanvasBackend::with_canvas_object(canvas).unwrap();
 
@@ -111,17 +112,16 @@ where
             false
         ).expect("Error while plotting the graph");
         
-        let canvas = get_canvas(graph_canvas_id);
-        
-       
-        let image_str = canvas.to_data_url_with_type(format!("image/{}", GRAPH_IMAGE_TYPE).as_str()).unwrap();
-        dbg!(&image_str);
+        let canvas = get_canvas(GRAPH_CANVAS_ID);
+        let data_url_image_str = canvas.to_data_url_with_type(format!("image/{}", GRAPH_IMAGE_TYPE).as_str()).unwrap();
+        dbg!(&data_url_image_str);
 
-        remove_canvas(graph_canvas_id);
+        let pattern_to_isolate = format!("data:image/{};base64,", GRAPH_IMAGE_TYPE);
+        let bytes_str = data_url_image_str.trim_start_matches(pattern_to_isolate.as_str());
 
-       
+        let bytes = BASE64_STANDARD.decode(bytes_str).unwrap();      
 
-        self.graph_cached = Some(image_str);
+        self.graph_cached = Some(bytes);
     }
 
     fn is_graph_drawn(&self) -> bool {
@@ -149,7 +149,9 @@ where
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
 
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+        let mut total_height = 0.0;
+
+        let resp = egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
             
             // "number of sample" at the top of the screen
@@ -157,33 +159,35 @@ where
                 ui.label(format!("Number of samples : {}", self.data.nb_samples()));
                 // ------------------ toolbar ------------------
                 self.command.display_in_ui(ui);
-            });
-
-
-        });
-
-        egui::CentralPanel::default().show(ctx, |ui| {
-            // The central panel the region left after adding TopPanel's and SidePanel's
-            ui.heading("Graph :");
-            ui.vertical(|ui| {
+                ui.separator();
+                ui.heading("Graph :");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
                     if ui.button("Draw graph").clicked() {
                         self.draw_graph();
                     }
                 });
 
-                ui.separator();
-
                 if self.is_graph_drawn() {
-                    let image_str = self.graph_cached.as_ref().unwrap();
-                    ui.add(Image::from_uri(image_str));
+                    
                 } else {
+                    ui.separator();
                     ui.label("No graph to display");
                 }
 
-                
             });
         });
+
+        total_height += resp.response.rect.height();
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            // The central panel the region left after adding TopPanel's and SidePanel's
+            
+        });
+
+        if self.is_graph_drawn() {
+            total_height += 30.0; // add some space for the image
+            update_canvas_style(GRAPH_CANVAS_ID, self.graph_size.0, self.graph_size.1, (total_height as usize, 0));
+        }
     }
 
 
