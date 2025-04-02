@@ -33,7 +33,7 @@ where
     K: SerieKey,
 {
     graph_size : (usize, usize),
-    graph_cached : Option<Vec<u8>>,
+    graph_cached : Option<String>,
 
     data: MemorySampleSerie<S, K>,
     command: Commands<K>,
@@ -113,16 +113,15 @@ where
         
         let canvas = get_canvas(graph_canvas_id);
         
-        let pattern = format!("data:image/{};base64,", GRAPH_IMAGE_TYPE);
-        let image_str = canvas.to_data_url_with_type(format!("image/{}", GRAPH_IMAGE_TYPE).as_str()).unwrap()
-            .replace(pattern.as_str(), "");
+       
+        let image_str = canvas.to_data_url_with_type(format!("image/{}", GRAPH_IMAGE_TYPE).as_str()).unwrap();
         dbg!(&image_str);
 
         remove_canvas(graph_canvas_id);
 
-        let image_bytes = BASE64_STANDARD.decode(image_str).unwrap();
+       
 
-        self.graph_cached = Some(image_bytes);
+        self.graph_cached = Some(image_str);
     }
 
     fn is_graph_drawn(&self) -> bool {
@@ -176,9 +175,8 @@ where
                 ui.separator();
 
                 if self.is_graph_drawn() {
-                    let bytes = self.graph_cached.as_ref().unwrap();
-                    let bytes: Bytes = Bytes::from(bytes.clone());
-                    ui.add(Image::from_bytes(format!("bytes://my_graph.{}", GRAPH_IMAGE_TYPE), bytes));
+                    let image_str = self.graph_cached.as_ref().unwrap();
+                    ui.add(Image::from_uri(image_str));
                 } else {
                     ui.label("No graph to display");
                 }
