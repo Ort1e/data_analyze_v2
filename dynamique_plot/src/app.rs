@@ -24,6 +24,8 @@ use crate::remove_canvas;
 use crate::get_canvas;
 
 
+pub const GRAPH_IMAGE_TYPE: &str = "png";
+
 /// The main application state
 pub struct MyApp<S, K>
 where
@@ -110,8 +112,10 @@ where
         ).expect("Error while plotting the graph");
         
         let canvas = get_canvas(graph_canvas_id);
-        let image_str = canvas.to_data_url_with_type("image/png").unwrap()
-            .replace("data:image/png;base64,", "");
+        
+        let pattern = format!("data:image/{};base64,", GRAPH_IMAGE_TYPE);
+        let image_str = canvas.to_data_url_with_type(format!("image/{}", GRAPH_IMAGE_TYPE).as_str()).unwrap()
+            .replace(pattern.as_str(), "");
         dbg!(&image_str);
 
         remove_canvas(graph_canvas_id);
@@ -174,7 +178,7 @@ where
                 if self.is_graph_drawn() {
                     let bytes = self.graph_cached.as_ref().unwrap();
                     let bytes: Bytes = Bytes::from(bytes.clone());
-                    ui.add(Image::from_bytes("bytes://my_graph.png", bytes));
+                    ui.add(Image::from_bytes(format!("bytes://my_graph.{}", GRAPH_IMAGE_TYPE), bytes));
                 } else {
                     ui.label("No graph to display");
                 }
