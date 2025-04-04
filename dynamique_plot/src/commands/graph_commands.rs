@@ -269,9 +269,6 @@ where
                                 ui.selectable_value(o, Some(op), format!("{}", op));
                             }
                         });
-                    ui.separator();
-                    
-                    ui.label("Value :");
                     ui.add(egui::DragValue::new(v).speed(0.1));
                 });
             }
