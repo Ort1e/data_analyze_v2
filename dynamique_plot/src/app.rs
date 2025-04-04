@@ -1,28 +1,18 @@
-use std::sync::Arc;
-
-use egui::load::Bytes;
-
-use egui::{popup, ColorImage, FontData, FontDefinitions, FontFamily, Frame, Ui};
-use base64::prelude::{BASE64_STANDARD, Engine as _};
+use egui::{FontData, FontDefinitions, FontFamily};
 use log::info;
-use plot_helper::data::filtering::Filters;
 use plot_helper::data::sample::key::SerieKey;
 use plot_helper::data::sample::Sample;
 use plot_helper::data::sample_serie::memory_sample_serie::MemorySampleSerie;
 use plot_helper::plotter::get_global_size;
 use plot_helper::plotter::layout::Layout;
-use plot_helper::plotter::scatter_plot::scatter_plot_with_backend;
-use plot_helper::plotter::line_plot::line_plot_with_backend;
-use plotters::backend::{PixelFormat, RGBPixel};
-use plotters::prelude::BitMapBackend;
-use plotters_canvas::CanvasBackend;
-use wasm_rs_dbg::dbg;
 
 
-use crate::commands::graph_commands::{GraphCommands, GraphType};
-use crate::{create_canvas, update_canvas_style, remove_canvas, toggle_ui};
+
+use crate::commands::graph_commands::GraphCommands;
+use crate::toggle_ui;
+
 #[cfg(target_arch = "wasm32")]
-use crate::get_canvas;
+use crate::{get_canvas, create_canvas, update_canvas_style, remove_canvas};
 
 
 pub const GRAPH_IMAGE_TYPE: &str = "png";
@@ -99,8 +89,15 @@ where
 
     /// Draw the graph
     /// Note : erase the previous graph
+    #[cfg(target_arch = "wasm32")]
     fn draw_graph(&mut self) {
         // see https://github.com/bluurryy/noise-functions-demo/blob/e23b3eb6cb670412f0433fb06fcd9f97cc43e221/src/app.rs#L420
+
+        use plot_helper::plotter::scatter_plot::scatter_plot_with_backend;
+        use plot_helper::plotter::line_plot::line_plot_with_backend;
+        use plotters::backend::{PixelFormat, RGBPixel};
+        use plotters::prelude::BitMapBackend;
+        use plotters_canvas::CanvasBackend;
 
         // remove the previous canvas
         remove_canvas(GRAPH_CANVAS_ID);
@@ -217,10 +214,12 @@ where
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
                     if self.is_automatic_redraw() {
                         if should_redraw {
+                            #[cfg(target_arch = "wasm32")]
                             self.draw_graph();
                         }
                     } else {
                         if ui.button("Draw graph").clicked() {
+                            #[cfg(target_arch = "wasm32")]
                             self.draw_graph();
                         }
                     } 
@@ -248,6 +247,7 @@ where
             
         });
 
+        #[cfg(target_arch = "wasm32")]
         if self.is_graph_drawn() {
             total_height += 50.0; // add some space for the image
             update_canvas_style(GRAPH_CANVAS_ID, self.graph_size.0, self.graph_size.1, (total_height as usize, 0));

@@ -8,7 +8,7 @@
         "x86_64-unknown-linux-gnu",
     ],
     "rust-analyzer.cargo.target": 
-        "wasm32-unknown-unknown"
-        //"x86_64-unknown-linux-gnu"
+        //"wasm32-unknown-unknown"
+        "x86_64-unknown-linux-gnu"
     
 }

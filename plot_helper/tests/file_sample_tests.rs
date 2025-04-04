@@ -27,6 +27,8 @@ const OUPUT_DIR_PATH : &'static str = "tests/ressources/output/";
 #[test]
 #[cfg(all(not(target_arch = "wasm32")))]
 fn memory_sample_test() {
+    use plot_helper::data::filtering::Operator;
+
 
     let output_scatter_file_path = Path::new(OUPUT_DIR_PATH).join("memory_sample_scatter_test.png");
     if output_scatter_file_path.exists() {
@@ -88,8 +90,9 @@ fn memory_sample_test() {
     assert!(output_line_file_path.exists());
 
     let filter = Filters::new(vec![Filter::new_number(
-        TestKey::Test2Num, 
-        move |l : f32| l <= 1.0
+        TestKey::Test2Num,
+        Operator::LessThanOrEqual,
+        1.0
     )]);
 
     scatter_plot::<FileTestSample, TestKey, _>(

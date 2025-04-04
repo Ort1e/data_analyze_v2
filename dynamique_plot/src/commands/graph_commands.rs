@@ -1,7 +1,7 @@
 use egui::Ui;
+use plot_helper::data::filtering::Filters;
 use plot_helper::data::sample::key::SerieKey;
 use plot_helper::stat::stats_serie::MetricName;
-use wasm_rs_dbg::dbg;
 
 use crate::app::get_str_from_opt_key;
 
@@ -62,12 +62,12 @@ impl GraphType {
 
 
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GraphCommands<K>
 where
 K: SerieKey,
 {
-    axis : Vec<(Option<K>, Option<K>)>,
+    axis : Vec<(Option<K>, Option<K>, Filters<K>)>,
     legend: Option<K>,
     graph_type: GraphType,
     outlier: bool,
@@ -117,7 +117,7 @@ K: SerieKey,
             self.draw_axis(ui);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
                 if ui.button("Add".to_string()).clicked() {
-                    self.axis.push((None, None));
+                    self.axis.push((None, None, Filters::default()));
                 }
 
                 if self.axis.len() > 1 {
@@ -132,7 +132,7 @@ K: SerieKey,
     }
 
     pub fn draw_axis(&mut self, ui : &mut Ui) {
-        for (n, (x_axis, y_axis)) in self.axis.iter_mut().enumerate() {
+        for (n, (x_axis, y_axis, _)) in self.axis.iter_mut().enumerate() {
             ui.horizontal(|ui| {
                 // x axis
                 egui::ComboBox::from_label(format!("Select X axis for {}", n + 1))
@@ -163,15 +163,15 @@ K: SerieKey,
         }
     }
 
-    pub fn get_axis(&self) -> &Vec<(Option<K>, Option<K>)> {
+    pub fn get_axis(&self) -> &Vec<(Option<K>, Option<K>, Filters<K>)> {
         &self.axis
     }
 
-    pub fn get_n_axis(&self, n : usize) -> (Option<K>, Option<K>) {
-        self.axis[n]
+    pub fn get_n_axis(&self, n : usize) -> &(Option<K>, Option<K>, Filters<K>) {
+        &self.axis[n]
     }
 
-    pub fn get_mut_n_axis(&mut self, n : usize) -> &mut (Option<K>, Option<K>) {
+    pub fn get_mut_n_axis(&mut self, n : usize) -> &mut (Option<K>, Option<K>, Filters<K>) {
         self.axis.get_mut(n).unwrap()
     }
 
@@ -194,7 +194,7 @@ K: SerieKey,
 {
     fn default() -> Self {
         GraphCommands {
-            axis: vec![(None, None)],
+            axis: vec![(None, None, Filters::default())],
             legend: None,
             graph_type: GraphType::default(),
             outlier: false,
