@@ -31,7 +31,7 @@ pub fn line_plot<'a, S, Key, IntoIter>(
     save_path : &str,
     layout : &Layout,
 
-    series : Vec<(Key, Option<Key>, Option<&Filters<Key>>)>,
+    series : Vec<(Key, Option<Key>, Filters<Key>)>,
     
     remove_outlier : bool,
     aggregation_metric : MetricName,
@@ -71,7 +71,7 @@ pub fn line_plot_with_backend<'a, S, Key, IntoIter, DB>(
     root_drawing_area : DB,
     layout : &Layout,
 
-    series : Vec<(Key, Option<Key>, Option<&Filters<Key>>)>,
+    series : Vec<(Key, Option<Key>, Filters<Key>)>,
     
     remove_outlier : bool,
     aggregation_metric : MetricName,

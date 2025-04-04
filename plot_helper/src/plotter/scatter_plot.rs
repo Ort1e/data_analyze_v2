@@ -23,7 +23,7 @@ pub fn scatter_plot<'a, S, Key, IntoIter>(
     save_path : &str,
     layout : &Layout,
 
-    series : Vec<(Key, Option<Key>, Option<&Filters<Key>>)>,
+    series : Vec<(Key, Option<Key>, Filters<Key>)>,
     
     remove_outlier : bool,
 ) -> Result<(), Box<dyn std::error::Error>> 
@@ -64,7 +64,7 @@ pub fn scatter_plot_with_backend<'a, S, Key, IntoIter, DB>(
     root_drawing_area : DB,
     layout : &Layout,
 
-    series : Vec<(Key, Option<Key>, Option<&Filters<Key>>)>,
+    series : Vec<(Key, Option<Key>, Filters<Key>)>,
     
     remove_outlier : bool,
 ) -> Result<(), DrawingAreaErrorKind<DB::ErrorType>> 

@@ -41,6 +41,17 @@ impl Operator {
             Operator::LessThanOrEqual => a <= b,
         }
     }
+
+    pub fn get_all() -> Vec<Operator> {
+        vec![
+            Operator::Equal,
+            Operator::NotEqual,
+            Operator::GreaterThan,
+            Operator::GreaterThanOrEqual,
+            Operator::LessThan,
+            Operator::LessThanOrEqual,
+        ]
+    }
 }
 
 
@@ -156,6 +167,28 @@ where
     fn default() -> Self {
         Self {
             filters: Vec::new(),
+        }
+    }
+}
+
+impl<K> From<Filter<K>> for Filters<K>
+where
+    K: SerieKey,
+{
+    fn from(filter: Filter<K>) -> Self {
+        Self {
+            filters: vec![filter],
+        }
+    }
+}
+
+impl<K> From<&Vec<Filter<K>>> for Filters<K>
+where
+    K: SerieKey,
+{
+    fn from(filters: &Vec<Filter<K>>) -> Self {
+        Self {
+            filters : filters.clone(),
         }
     }
 }

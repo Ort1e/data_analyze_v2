@@ -71,7 +71,7 @@ where
     }
 
     /// Apply a filter to the iterator
-    pub fn with_filter(self, filters : Option<&Filters<K>>) -> PlottableIterator<S, K, FilteredSerieIterator<S, K, It>> {
+    pub fn with_filter(self, filters : Filters<K>) -> PlottableIterator<S, K, FilteredSerieIterator<S, K, It>> {
         let filtered_serie = FilteredSerie::new(self.iterator, filters);
         PlottableIterator::new(filtered_serie.into_iter(), self.serie_keys, self.legend_key)
     }

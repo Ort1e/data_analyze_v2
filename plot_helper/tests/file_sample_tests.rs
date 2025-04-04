@@ -66,8 +66,8 @@ fn memory_sample_test() {
         output_scatter_file_path.as_os_str().to_str().unwrap(), 
         &Layout::new(2, 1), 
         vec![
-            (TestKey::Test1Num, Some(TestKey::Test2Num), None),
-            (TestKey::Test1Num, Some(TestKey::Test2Num), None)
+            (TestKey::Test1Num, Some(TestKey::Test2Num), Filters::empty()),
+            (TestKey::Test1Num, Some(TestKey::Test2Num), Filters::empty())
         ], 
         false
     ).unwrap();
@@ -80,8 +80,8 @@ fn memory_sample_test() {
         output_line_file_path.as_os_str().to_str().unwrap(), 
         &Layout::new(2, 1), 
         vec![
-            (TestKey::Test1Num, Some(TestKey::Test2Num), None),
-            (TestKey::Test1Num, Some(TestKey::Test2Num), None)
+            (TestKey::Test1Num, Some(TestKey::Test2Num), Filters::empty()),
+            (TestKey::Test1Num, Some(TestKey::Test2Num), Filters::empty())
         ], 
         false,
         MetricName::Additive
@@ -101,8 +101,8 @@ fn memory_sample_test() {
         output_filtered_line_file_path.as_os_str().to_str().unwrap(), 
         &Layout::new(2, 1), 
         vec![
-            (TestKey::Test1Num, Some(TestKey::Test2Num), None),
-            (TestKey::Test1Num, Some(TestKey::Test2Num), Some(&filter))
+            (TestKey::Test1Num, Some(TestKey::Test2Num), Filters::empty()),
+            (TestKey::Test1Num, Some(TestKey::Test2Num), filter.clone())
         ], 
         false
     ).unwrap();

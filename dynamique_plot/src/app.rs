@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use egui::{FontData, FontDefinitions, FontFamily};
 use log::info;
 use plot_helper::data::sample::key::SerieKey;
@@ -93,11 +95,14 @@ where
     fn draw_graph(&mut self) {
         // see https://github.com/bluurryy/noise-functions-demo/blob/e23b3eb6cb670412f0433fb06fcd9f97cc43e221/src/app.rs#L420
 
+        use crate::commands::graph_commands::GraphType;
+        use plot_helper::data::filtering::Filters;
         use plot_helper::plotter::scatter_plot::scatter_plot_with_backend;
         use plot_helper::plotter::line_plot::line_plot_with_backend;
         use plotters::backend::{PixelFormat, RGBPixel};
         use plotters::prelude::BitMapBackend;
         use plotters_canvas::CanvasBackend;
+        use base64::prelude::{BASE64_STANDARD, Engine as _};
 
         // remove the previous canvas
         remove_canvas(GRAPH_CANVAS_ID);
@@ -105,16 +110,13 @@ where
         self.drawn_error = None;
 
         // prepare the series
-        let mut series: Vec<(K, Option<K>, Option<&Filters<K>>)> = Vec::new();
-        
-        for (i, (x_axis, y_axis)) in self.command.get_axis().iter().enumerate() {
-            if x_axis.is_none() {
-                self.drawn_error = Some(format!("No x axis selected for graph part {}", i + 1));
-                return;
-            }
-
-            series.push((x_axis.unwrap().clone(), y_axis.clone(), None));
+        let series: Result<Vec<(K, Option<K>, Filters<K>)>, String> = self.command.get_series();
+        if series.is_err() {
+            self.drawn_error = Some(series.err().unwrap());
+            return;
         }
+        let series = series.unwrap();
+        
 
         let layout = Layout::new(1, series.len());
         {
@@ -210,7 +212,7 @@ where
                 // ------------------ graph control ------------------
 
                 ui.separator();
-                ui.heading("Graph :");
+                ui.heading("Display :");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
                     if self.is_automatic_redraw() {
                         if should_redraw {
@@ -218,14 +220,14 @@ where
                             self.draw_graph();
                         }
                     } else {
-                        if ui.button("Draw graph").clicked() {
+                        if ui.button("Draw").clicked() {
                             #[cfg(target_arch = "wasm32")]
                             self.draw_graph();
                         }
                     } 
 
                     toggle_ui(ui, &mut self.automatic_redraw);
-                    ui.label("Automatically redraw the graph :");
+                    ui.label("Automatically redraw :");
                 });
 
                 if !self.is_graph_drawn() {
@@ -259,7 +261,7 @@ where
 
 pub fn get_str_from_opt_key<K>(key: &Option<K>) -> String
 where
-    K: SerieKey,
+    K: Display,
 {
     match key {
         Some(k) => format!("{}", k),
