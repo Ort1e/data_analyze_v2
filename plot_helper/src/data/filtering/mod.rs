@@ -1,11 +1,13 @@
 use std::fmt::Display;
 
 use number_filter::DisplayNumberFilter;
+use string_filter::DisplayStringFilter;
 
 use super::sample::key::SerieKey;
 use super::sample::Sample;
 
 pub mod number_filter;
+pub mod string_filter;
 
 // ------------------------------------- Operator -------------------------------------
 
@@ -76,6 +78,7 @@ where
     K: SerieKey,
 {
     NumberFilter(DisplayNumberFilter<K>),
+    StringFilter(DisplayStringFilter<K>),
 }
 
 impl<K> Filter<K>
@@ -87,18 +90,24 @@ where
         Filter::NumberFilter(DisplayNumberFilter::new(key, operator, value))
     }
 
+    pub fn new_string(key: K, operator: Operator, value: String) -> Self {
+        Filter::StringFilter(DisplayStringFilter::new(key, operator, value))
+    }
+
     pub fn apply<S>(&self, sample: &S) -> bool
     where
         S: Sample<K>,
     {
         match self {
             Filter::NumberFilter(filter) => filter.apply(sample),
+            Filter::StringFilter(filter) => filter.apply(sample),
         }
     }
 
     pub fn get_key(&self) -> K {
         match self {
             Filter::NumberFilter(filter) => filter.get_key(),
+            Filter::StringFilter(filter) => filter.get_key(),
         }
     }
 
@@ -111,6 +120,15 @@ where
 {
     fn into(self) -> Filter<K> {
         Filter::NumberFilter(self)
+    }
+}
+
+impl<K> Into<Filter<K>> for DisplayStringFilter<K> 
+where
+    K: SerieKey,
+{
+    fn into(self) -> Filter<K> {
+        Filter::StringFilter(self)
     }
 }
 

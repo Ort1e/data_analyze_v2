@@ -1,4 +1,4 @@
-use egui::{Direction, Layout, Ui};
+use egui::{Color32, Direction, Layout, Ui};
 use plot_helper::data::filtering::{Filter, Filters, Operator};
 use plot_helper::data::sample::key::SerieKey;
 use plot_helper::stat::stats_serie::MetricName;
@@ -16,7 +16,8 @@ pub struct GraphCommands<K>
 where
 K: SerieKey,
 {
-    axis : Vec<(Option<K>, Option<K>, Vec<UiFilterData<K>>)>,
+    /// axis : (x axis, y axis, numberic filters, string filters)
+    axis : Vec<(Option<K>, Option<K>, Vec<UiFilterData<K>>, Vec<UiFilterData<K>>)>,
     legend: Option<K>,
     graph_type: GraphType,
     outlier: bool,
@@ -66,7 +67,7 @@ K: SerieKey,
             self.draw_axis(ui);
             ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
                 if ui.button("Add grah".to_string()).clicked() {
-                    self.axis.push((None, None, Vec::new()));
+                    self.axis.push((None, None, Vec::new(), Vec::new()));
                 }
             });
         });
@@ -78,63 +79,107 @@ K: SerieKey,
         let mut axis_to_remove = Vec::new();
         let nb_graphs = self.axis.len();
 
-        for (graph_n, (x_axis, y_axis, ui_filters)) in self.axis.iter_mut().enumerate() {
-            ui.heading(format!("Graph {} : ", graph_n + 1));
-            ui.horizontal(|ui| {
-                // x axis
-                egui::ComboBox::from_label(format!("Select X axis for {}", graph_n + 1))
-                    .selected_text(format!("{}", get_str_from_opt_key(x_axis)))
-                    .show_ui(ui, |ui| {
-                        for k in K::get_possible_values() {
-                            if k.is_numeric() {
-                                ui.selectable_value(x_axis, Some(k), format!("{}", k));
+        for (graph_n, (x_axis, y_axis, numeric_ui_filters, string_ui_filter)) in self.axis.iter_mut().enumerate() {
+            ui.collapsing(format!("Graph {} : ", graph_n + 1), |ui| { 
+                ui.horizontal(|ui| {
+                    // x axis
+                    egui::ComboBox::from_label(format!("Select X axis for {}", graph_n + 1))
+                        .selected_text(format!("{}", get_str_from_opt_key(x_axis)))
+                        .show_ui(ui, |ui| {
+                            for k in K::get_possible_values() {
+                                if k.is_numeric() {
+                                    ui.selectable_value(x_axis, Some(k), format!("{}", k));
+                                }
                             }
                         }
-                    }
-                );
-                ui.separator();
-                // y axis
-                egui::ComboBox::from_label(format!("Select Y axis for {}", graph_n + 1))
-                    .selected_text(format!("{}", get_str_from_opt_key(y_axis)))
-                    .show_ui(ui, |ui| {
-                        for k in K::get_possible_values() {
-                            if k.is_numeric() {
-                                ui.selectable_value(y_axis, Some(k), format!("{}", k));
+                    );
+                    ui.separator();
+                    // y axis
+                    egui::ComboBox::from_label(format!("Select Y axis for {}", graph_n + 1))
+                        .selected_text(format!("{}", get_str_from_opt_key(y_axis)))
+                        .show_ui(ui, |ui| {
+                            for k in K::get_possible_values() {
+                                if k.is_numeric() {
+                                    ui.selectable_value(y_axis, Some(k), format!("{}", k));
+                                }
                             }
+                            ui.selectable_value(y_axis, None, "None");
                         }
-                        ui.selectable_value(y_axis, None, "None");
+                    );
+                    ui.separator();
+                    // adding filters
+                    if ui.button("Add numeric filter").clicked() {
+                        let filter = UiFilterData::Numeric(None, None, 0.0);
+                        numeric_ui_filters.push(filter);
                     }
-                );
-                ui.separator();
-                // adding filters
-                if ui.button("Add numeric filter").clicked() {
-                    let filter = UiFilterData::Numeric(None, None, 0.0);
-                    ui_filters.push(filter);
-                }
-            });
-            ui.separator();
-            if ui_filters.len() > 0 {
-                ui.label("Filters : ");
-            }
-            let mut filter_to_remove = Vec::new();
-            for (n, ui_filter) in ui_filters.iter_mut().enumerate() {
-                ui_filter.draw_ui(ui, graph_n, n);
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                    if ui.button("Remove filter").clicked() {
-                        filter_to_remove.push(n);
+                    if ui.button("Add string filter").clicked() {
+                        let filter = UiFilterData::String(None, None, "".to_string());
+                        string_ui_filter.push(filter);
                     }
                 });
-            }
+                ui.separator();
 
-            for n in filter_to_remove.iter().rev() {
-                ui_filters.remove(*n);
-            }
-            
-            if nb_graphs > 1 {
+                ui.horizontal(|ui| {
+                    if numeric_ui_filters.len() > 0 {
+                        ui.vertical(|ui| {
+                            ui.label("Numeric filters : ");
                 
-                if ui.button("Remove graph").clicked() {
-                    axis_to_remove.push(graph_n);
-                }
+                            let mut filter_to_remove = Vec::new();
+                            for (n, ui_filter) in numeric_ui_filters.iter_mut().enumerate() {
+                                ui_filter.draw_ui(ui, graph_n, n);
+                                    ui.scope(|ui| {
+                                        ui.style_mut().visuals.widgets.inactive.fg_stroke.color = Color32::RED;
+                                    if ui.button("Remove filter").clicked() {
+                                        filter_to_remove.push(n);
+                                    }
+                                });
+                            }
+
+                            for n in filter_to_remove.iter().rev() {
+                                numeric_ui_filters.remove(*n);
+                            }
+                
+                        });
+                    }
+
+                    if string_ui_filter.len() > 0 && numeric_ui_filters.len() > 0 {
+                        ui.separator();
+                        ui.add_space(50.0);
+                        ui.separator();
+                    }
+
+                    if string_ui_filter.len() > 0 {
+                        ui.vertical(|ui| {
+                            ui.label("String filters : ");
+                
+                            let mut filter_to_remove = Vec::new();
+                            for (n, ui_filter) in string_ui_filter.iter_mut().enumerate() {
+                                ui_filter.draw_ui(ui, graph_n, n);
+                                ui.scope(|ui| {
+                                    ui.style_mut().visuals.widgets.inactive.fg_stroke.color = Color32::RED;
+                                    if ui.button("Remove filter").clicked() {
+                                        filter_to_remove.push(n);
+                                    }
+                                });
+                            
+                            }
+
+                            for n in filter_to_remove.iter().rev() {
+                                string_ui_filter.remove(*n);
+                            }
+                
+                        });
+                    }
+                });
+            });
+
+            if nb_graphs > 1 {
+                ui.scope(|ui| {
+                    ui.style_mut().visuals.widgets.inactive.fg_stroke.color = Color32::RED;
+                    if ui.button("Remove graph").clicked() {
+                        axis_to_remove.push(graph_n);
+                    }
+                });
             }
 
             ui.separator();
@@ -145,15 +190,15 @@ K: SerieKey,
         }
     }
 
-    pub fn get_axis(&self) -> &Vec<(Option<K>, Option<K>, Vec<UiFilterData<K>>)> {
+    pub fn get_axis(&self) -> &Vec<(Option<K>, Option<K>, Vec<UiFilterData<K>>, Vec<UiFilterData<K>>)> {
         &self.axis
     }
 
-    pub fn get_n_axis(&self, n : usize) -> &(Option<K>, Option<K>, Vec<UiFilterData<K>>) {
+    pub fn get_n_axis(&self, n : usize) -> &(Option<K>, Option<K>, Vec<UiFilterData<K>>, Vec<UiFilterData<K>>) {
         &self.axis[n]
     }
 
-    pub fn get_mut_n_axis(&mut self, n : usize) -> &mut (Option<K>, Option<K>, Vec<UiFilterData<K>>) {
+    pub fn get_mut_n_axis(&mut self, n : usize) -> &mut (Option<K>, Option<K>, Vec<UiFilterData<K>>, Vec<UiFilterData<K>>) {
         self.axis.get_mut(n).unwrap()
     }
 
@@ -172,13 +217,17 @@ K: SerieKey,
     pub fn get_series(&self) -> Result<Vec<(K, Option<K>, Filters<K>)>, String> {
         let mut series: Vec<(K, Option<K>, Filters<K>)> = Vec::new();
         
-        for (i, (x_axis, y_axis, ui_filters)) in self.get_axis().iter().enumerate() {
+        for (i, (x_axis, y_axis, numeric_ui_filters, string_ui_filters)) in self.get_axis().iter().enumerate() {
             if x_axis.is_none() {
                 return Err(format!("No x axis selected for graph part {}", i + 1));
             }
 
             let mut filter = Filters::empty();
-            for ui_filter in ui_filters {
+            for ui_filter in numeric_ui_filters {
+                let f = ui_filter.into_filter()?;
+                filter.add_filter(f);
+            }
+            for ui_filter in string_ui_filters {
                 let f = ui_filter.into_filter()?;
                 filter.add_filter(f);
             }
@@ -196,7 +245,7 @@ K: SerieKey,
 {
     fn default() -> Self {
         GraphCommands {
-            axis: vec![(None, None, Vec::new())],
+            axis: vec![(None, None, Vec::new(), Vec::new())],
             legend: None,
             graph_type: GraphType::default(),
             outlier: false,
@@ -228,12 +277,28 @@ where
         }
     }
 
+    pub fn get_mut_key(&mut self) -> &mut Option<K> {
+        match self {
+            UiFilterData::Numeric(k, _, _) => k,
+            UiFilterData::String(k, _, _) => k,
+        }
+    }
+
     pub fn get_operator(&self) -> Option<Operator> {
         match self {
             UiFilterData::Numeric(_, o, _) => *o,
             UiFilterData::String(_, o, _) => *o,
         }
     }
+
+    pub fn get_mut_operator(&mut self) -> &mut Option<Operator> {
+        match self {
+            UiFilterData::Numeric(_, o, _) => o,
+            UiFilterData::String(_, o, _) => o,
+        }
+    }
+
+    
 
     pub fn get_numeric_value(&self) -> f32 {
         match self {
@@ -250,32 +315,46 @@ where
     }
 
     pub fn draw_ui(&mut self, ui : &mut Ui, graph_n : usize, filter_n : usize) {
-        match self {
-            UiFilterData::Numeric(k, o, v) => {
-                ui.horizontal(|ui| {
-                    egui::ComboBox::from_id_salt(format!("Select key for filter {} for graph {}", filter_n + 1, graph_n + 1))
-                        .selected_text(format!("{}", get_str_from_opt_key(k)))
-                        .show_ui(ui, |ui| {
-                            for ref_k in K::get_possible_values() {
-                                if ref_k.is_numeric() {
-                                    ui.selectable_value(k, Some(ref_k), format!("{}", ref_k));
-                                }
-                            }
-                        });
-                    egui::ComboBox::from_id_salt(format!("Select operator for filter {} for graph {}", filter_n + 1, graph_n + 1))
-                        .selected_text(format!("{}", get_str_from_opt_key(o)))
-                        .show_ui(ui, |ui| {
-                            for op in Operator::get_all() {
-                                ui.selectable_value(o, Some(op), format!("{}", op));
-                            }
-                        });
-                    ui.add(egui::DragValue::new(v).speed(0.1));
+        ui.horizontal(|ui| {
+            let (k, o, str_desc) = match self {
+                UiFilterData::Numeric(k, o, _) => (k, o, "Numeric"),
+                UiFilterData::String(k, o, _) => (k, o, "String"),
+            };
+
+
+            egui::ComboBox::from_id_salt(format!("Select key for filter {} for graph {} ({})", filter_n + 1, graph_n + 1, str_desc))
+                .selected_text(format!("{}", get_str_from_opt_key(k)))
+                .show_ui(ui, |ui| {
+                    for ref_k in K::get_possible_values() {
+                        if str_desc == "Numeric" && ref_k.is_numeric() {
+                            ui.selectable_value(k, Some(ref_k), format!("{}", ref_k));
+                        }
+                        if str_desc == "String" && ref_k.is_string() {
+                            ui.selectable_value(k, Some(ref_k), format!("{}", ref_k));
+                        }
+                    }
                 });
-            }
-            UiFilterData::String(k, o, v) => {
-                todo!()
-            }
-        }
+            egui::ComboBox::from_id_salt(format!("Select operator for filter {} for graph {} ({})", filter_n + 1, graph_n + 1, str_desc))
+                .selected_text(format!("{}", get_str_from_opt_key(o)))
+                .show_ui(ui, |ui| {
+                    for op in Operator::get_all() {
+                        ui.selectable_value(o, Some(op), format!("{}", op));
+                    }
+                });
+
+
+            match self {
+                UiFilterData::Numeric(_, _, v) => {
+                    ui.add(egui::DragValue::new(v).speed(0.1));
+                }
+                UiFilterData::String(_, _, v) => {
+                        ui.add(egui::TextEdit::singleline(v)
+                            .hint_text("Enter a string")
+                            .desired_width(100.0));
+                }
+            };
+        
+        });
     }
 
     pub fn into_filter(&self) -> Result<Filter<K>, String> {
@@ -288,7 +367,11 @@ where
                 }
             }
             UiFilterData::String(k, o, v) => {
-                todo!()
+                if let (Some(k), Some(o), v) = (k, o, v) {
+                    Ok(Filter::new_string(*k, *o, v.clone()))
+                } else {
+                    Err("Incomplete string filter".to_string())
+                }
             }
         }
     }
