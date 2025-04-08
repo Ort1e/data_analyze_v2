@@ -9,8 +9,9 @@ use serde::Serialize;
 
 
 
-use crate::sub_app::graph_app::graph_commands::GraphCommands;
+use crate::sub_app::array_app::ArrayApp;
 use crate::sub_app::graph_app::GraphApp;
+use crate::sub_app::HasCommands;
 
 
 
@@ -21,7 +22,9 @@ where
     S: Sample<K>,
     K: SerieKey + DeserializeOwned + Serialize,
 {
-    graph_app : GraphApp<S, K>,
+    sample : MemorySampleSerie<S, K>,
+    graph_app : GraphApp<K>,
+    array_app : ArrayApp<K>,
 }
 
 impl<S, K> MyApp<S, K>
@@ -58,17 +61,11 @@ where
 
         egui_extras::install_image_loaders(&cc.egui_ctx);
 
-        // Load previous app state (if any).
-        // Note that you must enable the `persistence` feature for this to work.
-        let command: GraphCommands<K> = 
-            if let Some(storage) = cc.storage {
-                eframe::get_value(storage, eframe::APP_KEY).unwrap_or_else(|| GraphCommands::default())
-            } else {
-                GraphCommands::default()
-            };
 
         Self {
-            graph_app: GraphApp::new(data, command),
+            sample : data,
+            graph_app: GraphApp::load_from_context(cc),
+            array_app: ArrayApp::load_from_context(cc),
         }
     }
 }
@@ -85,7 +82,8 @@ where
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         info!("Saving state");
-        eframe::set_value(storage, eframe::APP_KEY, &self.graph_app.get_command());
+        eframe::set_value(storage, &GraphApp::<K>::get_app_storage_key(), &self.graph_app.get_command());
+        eframe::set_value(storage, &ArrayApp::<K>::get_app_storage_key(), &self.array_app.get_commands());
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
@@ -96,7 +94,7 @@ where
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
             
-            self.graph_app.draw_ui(ui);
+            self.graph_app.draw_ui(ui, &self.sample);
             
         });
 

@@ -19,6 +19,7 @@ fn main() {
     eframe::WebLogger::init(log::LevelFilter::Debug).ok();
 
     let web_options = eframe::WebOptions::default();
+    let data = MemorySampleSerie::new(FileInfo::new());
 
     wasm_bindgen_futures::spawn_local(async {
         let document = web_sys::window()
@@ -31,7 +32,7 @@ fn main() {
             .expect("Failed to find the_canvas_id")
             .dyn_into::<web_sys::HtmlCanvasElement>()
             .expect("the_canvas_id was not a HtmlCanvasElement");
-        let data = MemorySampleSerie::new(FileInfo::new());
+        
         let start_result = eframe::WebRunner::new()
             .start(
                 canvas,

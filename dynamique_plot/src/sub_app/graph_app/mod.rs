@@ -4,11 +4,15 @@ use plot_helper::data::sample::key::SerieKey;
 use plot_helper::data::sample::Sample;
 use plot_helper::data::sample_serie::memory_sample_serie::MemorySampleSerie;
 use plot_helper::plotter::get_global_size;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 use crate::toggle_ui;
 
 #[cfg(target_arch = "wasm32")]
 use crate::{create_canvas, get_canvas, remove_canvas, update_canvas_style};
+
+use super::HasCommands;
 
 pub const GRAPH_IMAGE_TYPE: &str = "png";
 pub const GRAPH_CANVAS_ID: &str = "graph_canvas";
@@ -17,9 +21,8 @@ pub mod graph_commands;
 
 
 #[derive(Debug, Clone)]
-pub struct GraphApp<S, K>
+pub struct GraphApp<K>
 where
-    S: Sample<K>,
     K: SerieKey,
 {
     graph_size : (usize, usize),
@@ -28,34 +31,20 @@ where
     drawn_error : Option<String>,
 
     automatic_redraw: bool,
-
-    data: MemorySampleSerie<S, K>,
     command: GraphCommands<K>,
 }
 
-impl<S, K> GraphApp<S, K>
+impl<K> GraphApp<K>
 where
-    S: Sample<K>,
     K: SerieKey
 {
-    pub fn new(data: MemorySampleSerie<S, K>, command: GraphCommands<K>) -> Self {
-        let (w, h) = get_global_size(&command.get_layout());
-        Self {
-            data,
-            graph_size: (w as usize, h as usize),
-            graph_cached: None,
-            drawn_error: None,
-            command,
-            automatic_redraw: false,
-        }
-    }
-
-
-
     /// Draw the graph
     /// Note : erase the previous graph
     #[cfg(target_arch = "wasm32")]
-    fn draw_graph(&mut self) {
+    fn draw_graph<S>(&mut self, data: &MemorySampleSerie<S, K>)
+    where
+        S: Sample<K>,
+    {
         // see https://github.com/bluurryy/noise-functions-demo/blob/e23b3eb6cb670412f0433fb06fcd9f97cc43e221/src/app.rs#L420
 
         use crate::sub_app::graph_app::graph_commands::GraphType;
@@ -95,7 +84,7 @@ where
         match self.command.get_graph_type() {
             GraphType::Scatter => {
                 scatter_plot_with_backend(
-                    &self.data, 
+                    data, 
                     self.command.get_legend(), 
                     backend, 
                     &layout,
@@ -105,7 +94,7 @@ where
             },
             GraphType::Line(metric) => {
                 line_plot_with_backend(
-                    &self.data, 
+                    data, 
                     self.command.get_legend(), 
                     backend, 
                     &layout,
@@ -130,11 +119,14 @@ where
         self.graph_cached = Some(bytes);
     }
 
-    pub fn draw_ui(&mut self, ui : &mut Ui) {
+    pub fn draw_ui<S>(&mut self, ui : &mut Ui, data : &MemorySampleSerie<S, K>) 
+    where 
+        S: Sample<K>,
+    {
         let mut total_height = 0.0;
 
         let resp =  ui.vertical(|ui| {
-            ui.label(format!("Number of samples : {}", self.data.nb_samples()));
+            ui.label(format!("Number of samples : {}", data.nb_samples()));
             ui.separator();
             // ------------------ toolbar ------------------
             let should_redraw = self.command.display_in_ui(ui);
@@ -147,12 +139,12 @@ where
                 if self.is_automatic_redraw() {
                     if should_redraw {
                         #[cfg(target_arch = "wasm32")]
-                        self.draw_graph();
+                        self.draw_graph(data);
                     }
                 } else {
                     if ui.button("Draw").clicked() {
                         #[cfg(target_arch = "wasm32")]
-                        self.draw_graph();
+                        self.draw_graph(data);
                     }
                 } 
 
@@ -192,5 +184,29 @@ where
 
     pub fn get_command(&self) -> &GraphCommands<K> {
         &self.command
+    }
+}
+
+impl<K> HasCommands<GraphCommands<K>> for GraphApp<K>
+where
+    K: SerieKey + Serialize + DeserializeOwned,
+{
+    fn get_commands(&self) -> &GraphCommands<K> {
+        &self.command
+    }
+
+    fn get_app_storage_key() -> String {
+        "graph_app".to_string()
+    }
+
+    fn from_commands(commands: GraphCommands<K>) -> Self {
+        let (w, h) = get_global_size(&commands.get_layout());
+        Self {
+            graph_size: (w as usize, h as usize),
+            graph_cached: None,
+            drawn_error: None,
+            command : commands,
+            automatic_redraw: false,
+        }
     }
 }

@@ -196,14 +196,6 @@ K: SerieKey,
         &self.axis
     }
 
-    pub fn get_n_axis(&self, n : usize) -> &(Option<K>, Option<K>, Vec<UiFilterData<K>>, Vec<UiFilterData<K>>) {
-        &self.axis[n]
-    }
-
-    pub fn get_mut_n_axis(&mut self, n : usize) -> &mut (Option<K>, Option<K>, Vec<UiFilterData<K>>, Vec<UiFilterData<K>>) {
-        self.axis.get_mut(n).unwrap()
-    }
-
     pub fn get_graph_type(&self) -> GraphType {
         self.graph_type
     }
