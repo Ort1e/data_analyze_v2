@@ -1,7 +1,9 @@
-use egui::{Color32, Direction, Layout, Ui};
+use egui::{Color32, Ui};
 use plot_helper::data::filtering::{Filter, Filters, Operator};
 use plot_helper::data::sample::key::SerieKey;
+use plot_helper::plotter::layout::Layout;
 use plot_helper::stat::stats_serie::MetricName;
+use serde::{Deserialize, Serialize};
 
 use crate::app::get_str_from_opt_key;
 
@@ -11,7 +13,7 @@ use crate::toggle_ui;
 
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GraphCommands<K>
 where
 K: SerieKey,
@@ -214,6 +216,14 @@ K: SerieKey,
         self.outlier
     }
 
+    pub fn get_layout(&self) -> Layout {
+        let mut height = 1;
+        if self.axis.len() > 1 {
+            height = self.axis.len();
+        }
+        Layout::new(1, height)
+    }
+
     pub fn get_series(&self) -> Result<Vec<(K, Option<K>, Filters<K>)>, String> {
         let mut series: Vec<(K, Option<K>, Filters<K>)> = Vec::new();
         
@@ -256,8 +266,8 @@ K: SerieKey,
 
 // ----------------- ui filter data -----------------
 
-#[derive(Debug, Clone, PartialEq)]
-enum UiFilterData<K>
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub(crate) enum UiFilterData<K>
 where
     K: SerieKey,
 {
@@ -380,7 +390,7 @@ where
 
 
 // ------------ graph type ------------
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GraphType {
     Line(MetricName),
     Scatter,

@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use number_filter::DisplayNumberFilter;
+use serde::{Deserialize, Serialize};
 use string_filter::DisplayStringFilter;
 
 use super::sample::key::SerieKey;
@@ -11,7 +12,7 @@ pub mod string_filter;
 
 // ------------------------------------- Operator -------------------------------------
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Operator {
     Equal,
     NotEqual,

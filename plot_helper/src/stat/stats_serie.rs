@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 
 #[cfg(feature = "parrallelize")]
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use serde::{Deserialize, Serialize};
 
 /// represent a serie with its stats
 #[derive(Debug, Clone)]
@@ -116,7 +117,7 @@ impl Display for MetricValue {
 }
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum MetricName {
     Mean,
     Median,

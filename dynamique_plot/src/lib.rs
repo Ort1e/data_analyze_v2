@@ -1,7 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 mod app;
-pub(crate) mod commands;
+pub(crate) mod sub_app;
 pub use app::MyApp;
 
 #[cfg(target_arch = "wasm32")]
@@ -14,7 +14,7 @@ fn get_canvas(id : &str) -> web_sys::HtmlCanvasElement {
                 .expect("No document");
 
         document
-                .get_element_by_id("the_canvas_id")
+                .get_element_by_id(id)
                 .expect("Failed to find the_canvas_id")
                 .dyn_into::<web_sys::HtmlCanvasElement>()
                 .expect("the_canvas_id was not a HtmlCanvasElement")
@@ -45,8 +45,6 @@ fn create_canvas(id : &str, width : usize, height : usize) -> web_sys::HtmlCanva
 
 #[cfg(target_arch = "wasm32")]
 fn remove_canvas(id : &str) -> bool{
-        use eframe::wasm_bindgen::JsCast as _;
-
         let document = web_sys::window()
                 .expect("No window")
                 .document()
@@ -63,8 +61,6 @@ fn remove_canvas(id : &str) -> bool{
 
 #[cfg(target_arch = "wasm32")]
 fn update_canvas_style(id : &str, width : usize, height : usize, offset : (usize, usize)) {
-        use eframe::wasm_bindgen::JsCast as _;
-
         let document = web_sys::window()
                 .expect("No window")
                 .document()
