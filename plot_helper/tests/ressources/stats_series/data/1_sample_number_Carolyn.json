@@ -7,5 +7,7 @@
     "median": 44.25,
     "q_1": 44.25,
     "q_3": 44.25,
-    "standard_deviation": 0.0
+    "standard_deviation": 0.0,
+    "min": 44.25,
+    "max": 44.25
 }

@@ -20,6 +20,8 @@ class TestSerie:
     q_1: float | None
     q_3: float | None
     standard_deviation: float | None = None
+    min: float | None = None
+    max: float | None = None
 
     @staticmethod
     def generate_constant(size : int) -> 'TestSerie':
@@ -27,7 +29,9 @@ class TestSerie:
         data = [1.0 for _ in range(size)]
         metric = 1.0 if size > 0 else None
         standard_deviation = 0.0 if size > 0 else None
-        return TestSerie(name, data, metric, metric, metric, metric, standard_deviation)
+        min = 1.0 if size > 0 else None
+        max = 1.0 if size > 0 else None
+        return TestSerie(name, data, metric, metric, metric, metric, standard_deviation, min, max)
 
 
     @staticmethod
@@ -42,12 +46,14 @@ class TestSerie:
         median = np.median(data)
         q_1 = np.quantile(data, 0.25, method="inverted_cdf")
         q_3 = np.quantile(data, 0.75, method="inverted_cdf")
+        min = np.min(data)
+        max = np.max(data)
         standard_deviation : float
         if size == 1:
             standard_deviation = 0.0
         else:
             standard_deviation = float(np.std(data, ddof=1))
-        return TestSerie(name, data, float(mean), float(median), float(q_1), float(q_3), standard_deviation)
+        return TestSerie(name, data, float(mean), float(median), float(q_1), float(q_3), standard_deviation = standard_deviation, min=float(min), max=float(max))
     
     def to_json(self) -> str:
         return json.dumps(asdict(self), indent=4)

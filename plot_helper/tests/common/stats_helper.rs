@@ -18,6 +18,8 @@ pub struct TestSerie {
     pub q_1: Option<f32>,
     pub q_3: Option<f32>,
     pub standard_deviation: Option<f64>,
+    pub min: Option<f32>,
+    pub max: Option<f32>,
 }
 
 impl TestSerie {
@@ -89,5 +91,19 @@ pub fn test_stats(instance : &TestSerie, verbose : bool) {
     }else{
         let result = relative_eq!(stats_serie.get_stats(MetricName::StandardDeviation).value, instance.standard_deviation.unwrap(), epsilon = ABSOLUTE_ERROR);
         assert!(result, "The standard deviation is not correct for the serie {}, with an obtained value of {} and an expected value of {}", instance_name, stats_serie.get_stats(MetricName::StandardDeviation).value, instance.standard_deviation.unwrap());
+    }
+
+    if instance.min.is_none() {
+        assert!(stats_serie.get_stats(MetricName::Min).value.is_nan(), "The min is not correct for the serie {} (Must be a NAN value).", instance_name);
+    }else{
+        let result = relative_eq!(stats_serie.get_stats(MetricName::Min).value, instance.min.unwrap() as f64, epsilon = ABSOLUTE_ERROR);
+        assert!(result, "The min is not correct for the serie {}, with an obtained value of {} and an expected value of {}", instance_name, stats_serie.get_stats(MetricName::Min).value, instance.min.unwrap());
+    }
+
+    if instance.max.is_none() {
+        assert!(stats_serie.get_stats(MetricName::Max).value.is_nan(), "The max is not correct for the serie {} (Must be a NAN value).", instance_name);
+    }else{
+        let result = relative_eq!(stats_serie.get_stats(MetricName::Max).value, instance.max.unwrap() as f64, epsilon = ABSOLUTE_ERROR);
+        assert!(result, "The max is not correct for the serie {}, with an obtained value of {} and an expected value of {}", instance_name, stats_serie.get_stats(MetricName::Max).value, instance.max.unwrap());
     }
 }

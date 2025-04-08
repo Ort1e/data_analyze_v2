@@ -9,5 +9,7 @@
     "median": -50.9,
     "q_1": -82.5,
     "q_3": -7.73,
-    "standard_deviation": 37.5338997885023
+    "standard_deviation": 37.5338997885023,
+    "min": -82.5,
+    "max": -7.73
 }

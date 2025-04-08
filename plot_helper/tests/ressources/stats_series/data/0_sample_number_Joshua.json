@@ -5,5 +5,7 @@
     "median": null,
     "q_1": null,
     "q_3": null,
-    "standard_deviation": null
+    "standard_deviation": null,
+    "min": null,
+    "max": null
 }

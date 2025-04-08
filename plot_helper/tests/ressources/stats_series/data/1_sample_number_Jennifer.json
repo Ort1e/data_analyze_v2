@@ -7,5 +7,7 @@
     "median": 80.69,
     "q_1": 80.69,
     "q_3": 80.69,
-    "standard_deviation": 0.0
+    "standard_deviation": 0.0,
+    "min": 80.69,
+    "max": 80.69
 }

@@ -16,11 +16,14 @@ impl StatsSerie {
         let mut stats = HashMap::new();
 
         if serie.len() == 0 {
-            stats.insert(MetricName::Mean, MetricValue::mean(f64::NAN));
-            stats.insert(MetricName::Median, MetricValue::median(f64::NAN));
-            stats.insert(MetricName::Additive, MetricValue::additive(f64::NAN));
-            stats.insert(MetricName::NbValues, MetricValue::nb_values(0));
-            stats.insert(MetricName::StandardDeviation, MetricValue::standard_deviation(f64::NAN));
+            stats.insert(MetricName::Mean, MetricName::Mean.with_value(f64::NAN));
+            stats.insert(MetricName::Median, MetricName::Median.with_value(f64::NAN));
+            stats.insert(MetricName::Additive, MetricName::Additive.with_value(f64::NAN));
+            stats.insert(MetricName::NbValues, MetricName::NbValues.with_value(0.0));
+            stats.insert(MetricName::StandardDeviation, MetricName::StandardDeviation.with_value(f64::NAN));
+            stats.insert(MetricName::Min, MetricName::Min.with_value(f64::NAN));
+            stats.insert(MetricName::Max, MetricName::Max.with_value(f64::NAN));
+            
 
             return Self {
                 serie : serie.clone(),
@@ -29,15 +32,23 @@ impl StatsSerie {
         }
         let nb_value = serie.len() as u64;
 
-        #[cfg(not(feature = "parrallelize"))]
-        let additive = serie.iter().map(|f| *f as f64).sum::<f64>();
-        
-        #[cfg(feature = "parrallelize")]
-        let additive = serie.par_iter().map(|f| *f as f64).sum::<f64>();
+        let mut additive = 0.0;
+        let mut min = f32::MAX;
+        let mut max = f32::MIN;
+
+        for value in serie.iter() {
+            additive += *value as f64;
+            if *value < min {
+                min = *value;
+            }
+            if *value > max {
+                max = *value;
+            }
+        }
                 
         stats.insert(
             MetricName::Mean, 
-            MetricValue::mean(additive / serie.len() as f64)
+            MetricName::Mean.with_value(additive / serie.len() as f64)
         );
 
         let sorted_serie = {
@@ -46,14 +57,16 @@ impl StatsSerie {
             sorted_serie
         };
         if serie.len() % 2 == 0 {
-            stats.insert(MetricName::Median, MetricValue::median((sorted_serie[serie.len() / 2] as f64 + sorted_serie[serie.len() / 2 - 1] as f64) / 2.0));
+            stats.insert(MetricName::Median, MetricName::Median.with_value((sorted_serie[serie.len() / 2] as f64 + sorted_serie[serie.len() / 2 - 1] as f64) / 2.0));
         }else{
-            stats.insert(MetricName::Median, MetricValue::median(sorted_serie[serie.len() / 2] as f64));
+            stats.insert(MetricName::Median, MetricName::Median.with_value(sorted_serie[serie.len() / 2] as f64));
         }
 
-        stats.insert(MetricName::Additive, MetricValue::additive(additive));
+        stats.insert(MetricName::Additive, MetricName::Additive.with_value(additive));
+        stats.insert(MetricName::Min, MetricName::Min.with_value(min as f64));
+        stats.insert(MetricName::Max, MetricName::Max.with_value(max as f64));
 
-        stats.insert(MetricName::NbValues, MetricValue::nb_values(nb_value));
+        stats.insert(MetricName::NbValues, MetricName::NbValues.with_value(nb_value as f64));
 
         let standard_deviation = if serie.len() == 1 {
             0.0
@@ -63,7 +76,7 @@ impl StatsSerie {
             (sum / (serie.len() as f64 - 1.0)).sqrt()
         };
 
-        stats.insert(MetricName::StandardDeviation, MetricValue::standard_deviation(standard_deviation));
+        stats.insert(MetricName::StandardDeviation, MetricName::StandardDeviation.with_value(standard_deviation));
 
         Self {
             serie : serie.clone(),
@@ -102,43 +115,6 @@ impl Display for MetricValue {
     }
 }
 
-impl MetricValue {
-    pub fn median(value : f64) -> Self {
-        Self {
-            name : MetricName::Median,
-            value,
-        }
-    }
-
-    pub fn mean(value : f64) -> Self {
-        Self {
-            name : MetricName::Mean,
-            value,
-        }
-    }
-
-    pub fn additive(value : f64) -> Self {
-        Self {
-            name : MetricName::Additive,
-            value,
-        }
-    }
-
-    pub fn nb_values(value : u64) -> Self {
-        Self {
-            name : MetricName::NbValues,
-            value : value as f64,
-        }
-    }
-
-    pub fn standard_deviation(value : f64) -> Self {
-        Self {
-            name : MetricName::StandardDeviation,
-            value,
-        }
-    }
-}
-
 
 #[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, PartialOrd, Ord)]
 pub enum MetricName {
@@ -147,6 +123,8 @@ pub enum MetricName {
     Additive,
     NbValues,
     StandardDeviation,
+    Min,
+    Max,
 }
 
 impl Display for MetricName {
@@ -164,6 +142,8 @@ impl MetricName {
             MetricName::Additive => "additive".to_string(),
             MetricName::NbValues => "nb_values".to_string(),
             MetricName::StandardDeviation => "standard_deviation".to_string(),
+            MetricName::Min => "min".to_string(),
+            MetricName::Max => "max".to_string(),
         }
     }
 
@@ -174,6 +154,15 @@ impl MetricName {
             MetricName::Additive,
             MetricName::NbValues,
             MetricName::StandardDeviation,
+            MetricName::Min,
+            MetricName::Max,
         ]
+    }
+
+    pub fn with_value(self, value : f64) -> MetricValue {
+        MetricValue {
+            name : self,
+            value,
+        }
     }
 }
