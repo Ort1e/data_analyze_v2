@@ -185,6 +185,12 @@ where
     pub fn get_command(&self) -> &GraphCommands<K> {
         &self.command
     }
+
+    pub fn remove_canvas(&mut self) {
+        self.graph_cached = None;
+        #[cfg(target_arch = "wasm32")]
+        remove_canvas(GRAPH_CANVAS_ID);
+    }
 }
 
 impl<K> HasCommands<GraphCommands<K>> for GraphApp<K>

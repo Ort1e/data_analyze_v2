@@ -1,5 +1,8 @@
 use array_command::ArrayCommands;
+use egui::Ui;
 use plot_helper::data::sample::key::SerieKey;
+use plot_helper::data::sample::Sample;
+use plot_helper::data::sample_serie::memory_sample_serie::MemorySampleSerie;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -20,9 +23,11 @@ impl<K> ArrayApp<K>
 where
     K: SerieKey,
 {
-    
-    pub fn get_commands(&self) -> &ArrayCommands<K> {
-        &self.array_commands
+    pub fn draw_ui<S>(&mut self, ui : &mut Ui, data : &MemorySampleSerie<S, K>) 
+    where 
+        S: Sample<K>,
+    {
+        
     }
 }
 

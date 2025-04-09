@@ -11,6 +11,8 @@ pub struct FileInfo {
     nb_line: u32,
     nb_char: u32,
     file_name: String,
+    repository: String,
+    nb_method: u32,
 }
 
 impl FileInfo {
@@ -25,6 +27,7 @@ impl Sample<key::FileKey> for FileInfo {
         match key {
             key::FileKey::NbLine => self.nb_line as f32,
             key::FileKey::NbChar => self.nb_char as f32,
+            key::FileKey::NbMethod => self.nb_method as f32,
             _ => panic!("The key {:?} is not numeric", key)
         }
     }
@@ -33,6 +36,7 @@ impl Sample<key::FileKey> for FileInfo {
         match key {
             key::FileKey::Language => self.language.clone(),
             key::FileKey::FileName => self.file_name.clone(),
+            key::FileKey::Repository => self.repository.clone(),
             _ => panic!("The key {:?} is not a string", key)
         }
     }

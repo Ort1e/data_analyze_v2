@@ -26,5 +26,5 @@ pub trait HasCommands<C> : Sized
         };
 
         Self::from_commands(command)
-    }
+    }        
 }

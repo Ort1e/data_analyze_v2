@@ -1,122 +1,26 @@
 [
-  {
-    "language": "Java",
-    "nb_line": 175,
-    "nb_char": 4785,
-    "file_name": "Main.java"
-  },
-  {
-    "language": "Java",
-    "nb_line": 210,
-    "nb_char": 6000,
-    "file_name": "Utils.java"
-  },
-  {
-    "language": "Java",
-    "nb_line": 155,
-    "nb_char": 4300,
-    "file_name": "Service.java"
-  },
-  {
-    "language": "Java",
-    "nb_line": 1350,
-    "nb_char": 51000,
-    "file_name": "Controller.java"
-  },
-  {
-    "language": "Java",
-    "nb_line": 250,
-    "nb_char": 7000,
-    "file_name": "Repository.java"
-  },
-  {
-    "language": "C",
-    "nb_line": 130,
-    "nb_char": 3600,
-    "file_name": "main.c"
-  },
-  {
-    "language": "C",
-    "nb_line": 85,
-    "nb_char": 2500,
-    "file_name": "utils.c"
-  },
-  {
-    "language": "C",
-    "nb_line": 175,
-    "nb_char": 4600,
-    "file_name": "module.c"
-  },
-  {
-    "language": "C",
-    "nb_line": 220,
-    "nb_char": 5400,
-    "file_name": "driver.c"
-  },
-  {
-    "language": "C",
-    "nb_line": 1300,
-    "nb_char": 49500,
-    "file_name": "handler.c"
-  },
-  {
-    "language": "Java",
-    "nb_line": 300,
-    "nb_char": 8500,
-    "file_name": "Database.java"
-  },
-  {
-    "language": "Java",
-    "nb_line": 190,
-    "nb_char": 5200,
-    "file_name": "Security.java"
-  },
-  {
-    "language": "Java",
-    "nb_line": 140,
-    "nb_char": 4000,
-    "file_name": "Helper.java"
-  },
-  {
-    "language": "Java",
-    "nb_line": 230,
-    "nb_char": 6600,
-    "file_name": "Config.java"
-  },
-  {
-    "language": "C",
-    "nb_line": 195,
-    "nb_char": 5300,
-    "file_name": "logger.c"
-  },
-  {
-    "language": "C",
-    "nb_line": 110,
-    "nb_char": 3000,
-    "file_name": "parser.c"
-  },
-  {
-    "language": "C",
-    "nb_line": 180,
-    "nb_char": 5000,
-    "file_name": "network.c"
-  },
-  {
-    "language": "C",
-    "nb_line": 145,
-    "nb_char": 4200,
-    "file_name": "queue.c"
-  },
-  {
-    "language": "Java",
-    "nb_line": 280,
-    "nb_char": 7800,
-    "file_name": "Messaging.java"
-  },
-  {
-    "language": "C",
-    "nb_line": 90,
-    "nb_char": 2800,
-    "file_name": "cache.c"
-  }
+  {"language": "Java", "nb_line": 175, "nb_char": 4785, "file_name": "Main.java", "repository": "repo-java-core", "nb_method": 12},
+  {"language": "Java", "nb_line": 210, "nb_char": 6000, "file_name": "Utils.java", "repository": "repo-java-core", "nb_method": 14},
+  {"language": "Java", "nb_line": 155, "nb_char": 4300, "file_name": "Service.java", "repository": "repo-java-core", "nb_method": 11},
+  {"language": "Java", "nb_line": 1350, "nb_char": 51000, "file_name": "Controller.java", "repository": "repo-java-web", "nb_method": 75},
+  {"language": "Java", "nb_line": 250, "nb_char": 7000, "file_name": "Repository.java", "repository": "repo-java-core", "nb_method": 18},
+
+  {"language": "C", "nb_line": 130, "nb_char": 3600, "file_name": "main.c", "repository": "repo-c-core", "nb_method": 6},
+  {"language": "C", "nb_line": 85, "nb_char": 2500, "file_name": "utils.c", "repository": "repo-c-core", "nb_method": 4},
+  {"language": "C", "nb_line": 175, "nb_char": 4600, "file_name": "module.c", "repository": "repo-c-core", "nb_method": 8},
+  {"language": "C", "nb_line": 220, "nb_char": 5400, "file_name": "driver.c", "repository": "repo-c-driver", "nb_method": 10},
+  {"language": "C", "nb_line": 1300, "nb_char": 49500, "file_name": "handler.c", "repository": "repo-c-driver", "nb_method": 55},
+
+  {"language": "Java", "nb_line": 300, "nb_char": 8500, "file_name": "Database.java", "repository": "repo-java-web", "nb_method": 22},
+  {"language": "Java", "nb_line": 190, "nb_char": 5200, "file_name": "Security.java", "repository": "repo-java-core", "nb_method": 13},
+  {"language": "Java", "nb_line": 140, "nb_char": 4000, "file_name": "Helper.java", "repository": "repo-java-core", "nb_method": 10},
+  {"language": "Java", "nb_line": 230, "nb_char": 6600, "file_name": "Config.java", "repository": "repo-java-core", "nb_method": 16},
+
+  {"language": "C", "nb_line": 195, "nb_char": 5300, "file_name": "logger.c", "repository": "repo-c-core", "nb_method": 9},
+  {"language": "C", "nb_line": 110, "nb_char": 3000, "file_name": "parser.c", "repository": "repo-c-core", "nb_method": 5},
+  {"language": "C", "nb_line": 180, "nb_char": 5000, "file_name": "network.c", "repository": "repo-c-core", "nb_method": 8},
+  {"language": "C", "nb_line": 145, "nb_char": 4200, "file_name": "queue.c", "repository": "repo-c-core", "nb_method": 7},
+
+  {"language": "Java", "nb_line": 280, "nb_char": 7800, "file_name": "Messaging.java", "repository": "repo-java-web", "nb_method": 20},
+  {"language": "C", "nb_line": 90, "nb_char": 2800, "file_name": "cache.c", "repository": "repo-c-core", "nb_method": 4}
 ]

@@ -25,6 +25,8 @@ where
     sample : MemorySampleSerie<S, K>,
     graph_app : GraphApp<K>,
     array_app : ArrayApp<K>,
+
+    command_to_display : CommandToDisplay,
 }
 
 impl<S, K> MyApp<S, K>
@@ -66,6 +68,7 @@ where
             sample : data,
             graph_app: GraphApp::load_from_context(cc),
             array_app: ArrayApp::load_from_context(cc),
+            command_to_display : CommandToDisplay::default(),
         }
     }
 }
@@ -93,8 +96,28 @@ where
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
-            
-            self.graph_app.draw_ui(ui, &self.sample);
+            ui.horizontal(|ui| {
+                ui.label("Dynamique Plot");
+                ui.monospace("v0.1");
+
+                let resp = egui::ComboBox::from_label("Select the command to display !")
+                    .selected_text(self.command_to_display.to_string())
+                    .show_ui(ui, |ui| {
+                        for command in CommandToDisplay::get_possible_values() {
+                            ui.selectable_value(&mut self.command_to_display, command.clone(), command.to_string());
+                        }
+                    });
+            });
+            ui.separator();
+            match self.command_to_display {
+                CommandToDisplay::Graph => {
+                    self.graph_app.draw_ui(ui, &self.sample);
+                },
+                CommandToDisplay::Array => {
+                    self.graph_app.remove_canvas();
+                    self.array_app.draw_ui(ui, &self.sample);
+                }
+            }
             
         });
 
@@ -108,6 +131,34 @@ where
 
     
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum CommandToDisplay {
+    Graph,
+    Array,
+}
+
+impl CommandToDisplay {
+    pub fn get_possible_values() -> Vec<CommandToDisplay> {
+        vec![CommandToDisplay::Graph, CommandToDisplay::Array]
+    }
+}
+
+impl Default for CommandToDisplay {
+    fn default() -> Self {
+        CommandToDisplay::Graph
+    }
+}
+
+impl Display for CommandToDisplay {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CommandToDisplay::Graph => write!(f, "Graph"),
+            CommandToDisplay::Array => write!(f, "Array"),
+        }
+    }
+}
+
 
 pub fn get_str_from_opt_key<K>(key: &Option<K>) -> String
 where

@@ -12,7 +12,9 @@ generate_plot_key!(
         Language { "Language", String },
         NbLine { "nb of ligne in the file", Numeric },
         NbChar { "nb of character in the file", Numeric },
-        FileName { "file name", String }
+        FileName { "file name", String },
+        Repository { "repository", String },
+        NbMethod { "nb of method in the file", Numeric }
     ]
 
 );
