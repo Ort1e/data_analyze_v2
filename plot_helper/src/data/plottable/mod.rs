@@ -75,6 +75,25 @@ where
         let filtered_serie = FilteredSerie::new(self.iterator, filters);
         PlottableIterator::new(filtered_serie.into_iter(), self.serie_keys, self.legend_key)
     }
+
+    /// Collect statistics for multiple series (per key) in a single serie.
+    pub fn get_stats(self, stats_serie_keys: &Vec<K>) -> HashMap<K, StatsSerie> {
+        let mut stats_serie = HashMap::new();
+        for sample in self.iterator {
+            for key in stats_serie_keys {
+                if !key.is_numeric() {
+                    panic!("stats serie key must be numeric");
+                }
+                let key_value = sample.get_numeric_value(key);
+                stats_serie.entry(key).or_insert_with(|| vec![]).push(key_value);
+            }
+        }
+        // Transform buffered vectors into StatsSerie objects
+        stats_serie.into_iter().map(|(key, values)| {
+            let stats_serie = StatsSerie::new(&values);
+            (key.clone(), stats_serie)
+        }).collect()
+    }
     
     /// Collect statistics for multiple series sorted by a the uniquee value of a specified key.
     /// This function is optimized for speed but not for memory (O(n)).
