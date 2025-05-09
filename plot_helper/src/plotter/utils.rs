@@ -92,6 +92,9 @@ where
     if legend_serie_key.is_some() && legend_serie_key.unwrap().is_numeric(){
         unique_legends.sort_by(|a, b| a.parse::<f32>().unwrap().partial_cmp(&b.parse::<f32>().unwrap()).unwrap());
     }
+    if legend_serie_key.is_some() && legend_serie_key.unwrap().is_string(){
+        unique_legends.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    }
 
     for legend in unique_legends.iter() {
         // skip empty legend

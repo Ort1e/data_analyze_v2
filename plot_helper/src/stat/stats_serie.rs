@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 #[cfg(feature = "parrallelize")]
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 /// represent a serie with its stats
 #[derive(Debug, Clone)]

@@ -1,7 +1,7 @@
+use std::collections::HashMap;
 use std::mem;
 use std::ops::Range;
 
-use indexmap::IndexMap;
 use crate::data::rangeable::Rangeable;
 use crate::stat::compression::compress_data_serie;
 use crate::stat::remove_outliers;
@@ -10,7 +10,7 @@ use crate::stat::stats_serie::{MetricName, StatsSerie};
 
 
 
-type MapImpl<K, V> = IndexMap<K, V>;
+type MapImpl<K, V> = HashMap<K, V>;
 
 /// a (x, y) point
 type Point = (f32, f32);
@@ -190,9 +190,15 @@ impl Into<MapImpl<String, Vec<Point>>> for PlotData {
 
 impl IntoIterator for PlotData {
     type Item = (String, Vec<Point>);
-    type IntoIter = <IndexMap<std::string::String, Vec<(f32, f32)>> as IntoIterator>::IntoIter;
+    type IntoIter = <Vec<Self::Item> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
+        // Convert the HashMap into a Vec of tuples
+        let mut vec: Vec<(String, Vec<(f32, f32)>)> = self.data.into_iter().collect();
+        // Sort the Vec by the first element of the tuple (the String key)
+        vec.sort_by(|a, b| a.0.cmp(&b.0));
+
+        // Return the Vec as an iterator
+        vec.into_iter()
     }
 }

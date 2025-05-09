@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
 
-use indexmap::IndexMap;
 use plot_helper::plotter::plot_data::PlotData;
 use plot_helper::stat::stats_serie::MetricName;
 
@@ -15,7 +14,7 @@ extern crate approx;
 /// organise the data with the number of sample as the legend, and each name as 
 /// the x coordinate, in the order of the TestSeries output
 fn get_all_test_plot_series_from_dir() -> Result<(PlotData, HashMap<String, Vec<common::stats_helper::TestSerie>>), std::io::Error> {
-    let mut all_plot_serie = IndexMap::new();
+    let mut all_plot_serie = HashMap::new();
     let mut all_test_series = HashMap::new();
 
     let entries = fs::read_dir(common::STATS_RESSOURCES_DIR_PATH)?;
