@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use number_filter::DisplayNumberFilter;
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 use string_filter::DisplayStringFilter;
 
 use super::sample::key::SerieKey;

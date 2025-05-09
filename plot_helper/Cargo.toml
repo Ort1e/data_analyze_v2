@@ -29,6 +29,8 @@ csv = {workspace = true}
 rayon = {workspace = true, optional = true}
 sqlite = {workspace = true, optional = true}
 
+indexmap = {workspace = true} # preserve order of insertion (json)
+
 # log
 log = {workspace = true}
 test-log = {workspace = true}

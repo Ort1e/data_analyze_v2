@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use std::mem;
 use std::ops::Range;
 
+use indexmap::IndexMap;
 use crate::data::rangeable::Rangeable;
 use crate::stat::compression::compress_data_serie;
 use crate::stat::remove_outliers;
@@ -10,7 +10,7 @@ use crate::stat::stats_serie::{MetricName, StatsSerie};
 
 
 
-
+type MapImpl<K, V> = IndexMap<K, V>;
 
 /// a (x, y) point
 type Point = (f32, f32);
@@ -18,7 +18,7 @@ type Point = (f32, f32);
 /// represent pluggable data, indexed by a legend, for one graph
 #[derive(Debug, Clone)]
 pub struct PlotData {
-    data:  HashMap<String, Vec<Point>>,
+    data:  MapImpl<String, Vec<Point>>,
     x_range: Range<f32>,
     y_range: Range<f32>,
 }
@@ -30,7 +30,7 @@ impl PlotData {
     where
         It : Iterator<Item = (String, Point)> + Rangeable
     {
-        let mut data_collected = HashMap::new();
+        let mut data_collected = MapImpl::new();
         while let Some((key, point)) = data.next() {
             data_collected.entry(key).or_insert_with(Vec::new).push(point);
         }
@@ -73,7 +73,7 @@ impl PlotData {
     /// compress the data to accelerate the plotting
     fn compress(&mut self) -> &mut Self{
         let (range_x, range_y) = self.get_range();
-        let original_data = mem::replace(&mut self.data, HashMap::new()); // take out the map
+        let original_data = mem::replace(&mut self.data, MapImpl::new()); // take out the map
         // Transform the data.
         self.data = original_data.into_iter().map(|(key, serie)| {
             // Now you can avoid cloning the key, as `key` is owned here due to `into_iter()`.
@@ -86,7 +86,7 @@ impl PlotData {
 
     /// aggregate the data and combine the value with the same x value with a specified metric
     pub fn apply_aggregator(self, aggregator : MetricName) -> Result<PlotData, Box<dyn std::error::Error>> {
-        let mut aggregated_data = HashMap::new();
+        let mut aggregated_data = MapImpl::new();
         for (key, mut serie) in self.data.into_iter() {
             serie.sort_by(|(x1, _), (x2, _)| x1.partial_cmp(x2).unwrap());
             let mut aggregated_serie = Vec::new(); // new serie
@@ -118,7 +118,7 @@ impl PlotData {
         Ok(aggregated_data.into())
     }
 
-    fn get_range_from_hashmap(data : &HashMap<String, Vec<Point>>) -> (Range<f32>, Range<f32>) {
+    fn get_range_from_hashmap(data : &MapImpl<String, Vec<Point>>) -> (Range<f32>, Range<f32>) {
         let mut y_min = f32::MAX;
         let mut y_max = f32::MIN;
     
@@ -162,7 +162,7 @@ impl PlotData {
         (x_min..x_max, y_min..y_max)
     }
 
-    pub fn get_data(&self) -> &HashMap<String, Vec<Point>> {
+    pub fn get_data(&self) -> &MapImpl<String, Vec<Point>> {
         &self.data
     }
 
@@ -171,8 +171,8 @@ impl PlotData {
     }
 }
 
-impl From<HashMap<String, Vec<Point>>> for PlotData {
-    fn from(data : HashMap<String, Vec<Point>>) -> Self {
+impl From<MapImpl<String, Vec<Point>>> for PlotData {
+    fn from(data : MapImpl<String, Vec<Point>>) -> Self {
         let (x_range, y_range) = PlotData::get_range_from_hashmap(&data);
         Self {
             data,
@@ -182,15 +182,15 @@ impl From<HashMap<String, Vec<Point>>> for PlotData {
     }
 }
 
-impl Into<HashMap<String, Vec<Point>>> for PlotData {
-    fn into(self) -> HashMap<String, Vec<Point>> {
+impl Into<MapImpl<String, Vec<Point>>> for PlotData {
+    fn into(self) -> MapImpl<String, Vec<Point>> {
         self.data
     }
 }
 
 impl IntoIterator for PlotData {
     type Item = (String, Vec<Point>);
-    type IntoIter = std::collections::hash_map::IntoIter<String, Vec<Point>>;
+    type IntoIter = <IndexMap<std::string::String, Vec<(f32, f32)>> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.data.into_iter()
