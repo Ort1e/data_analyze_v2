@@ -199,7 +199,11 @@ where
             
 
             let legend = if let Some(legend_key) = self.legend_key.as_ref() {
-                sample.get_string_value(legend_key)
+                if legend_key.is_numeric() {
+                    sample.get_numeric_value(legend_key).to_string()
+                } else {
+                    sample.get_string_value(legend_key)
+                }
             } else {
                 "All".to_string()
             };
