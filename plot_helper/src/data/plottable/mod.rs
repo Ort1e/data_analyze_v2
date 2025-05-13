@@ -44,13 +44,7 @@ where
     /// -args: iterator: the iterator over the serie of Sample
     /// -args: serie_keys: the keys to use for the x and y values (x, y). If y is None, the iterator will return (x, 1) to allow aggregation
     /// -args: legend_key: the key to use for the legend. If None, the legend will be "All"
-    pub fn new(iterator : It, serie_keys : (K, Option<K>), legend_key : Option<K>) -> Self {
-        if let Some(legend_key) = legend_key.as_ref() {
-            if legend_key.is_numeric() {
-                panic!("legend_key must be a string key");
-            }
-        }
-        
+    pub fn new(iterator : It, serie_keys : (K, Option<K>), legend_key : Option<K>) -> Self {        
         if !serie_keys.0.is_numeric() {
             panic!("x_key must be a numeric key");
         }
