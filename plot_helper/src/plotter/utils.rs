@@ -19,7 +19,6 @@ impl Palette for CustomPalette {
     const COLORS: &'static [(u8, u8, u8)] = &[
         (230, 25, 75),
         (60, 180, 75),
-        (255, 225, 25),
         (0, 130, 200),
         (245, 130, 48),
         (145, 30, 180),
