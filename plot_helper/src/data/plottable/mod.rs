@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::ops::Range;
+use std::path::Path;
 
 use crate::stat::stats_serie::StatsSerie;
 
@@ -141,7 +142,40 @@ where
     pub fn get_legend_key(&self) -> &Option<K> {
         &self.legend_key
     }
+
+    /// Export the plottable iterator to a CSV file (consuming the iterator)
+    pub fn to_csv<P: AsRef<Path>>(&mut self, path : P) {
+        let mut wtr = csv::Writer::from_path(path).expect("Failed to create CSV writer");
+        
+        // Write header
+        let mut header = vec![];
+        if let Some(legend_key) = &self.legend_key {
+            header.push(legend_key.get_display_name());
+        } else {
+            header.push("legend".to_string());
+        }
+        header.push(self.serie_keys.0.get_display_name());
+        if let Some(y_key) = &self.serie_keys.1 {
+            header.push(y_key.get_display_name());
+        } else {
+            header.push("count".to_string());
+        }
+        wtr.write_record(&header).expect("Failed to write CSV header");
+
+        // Write records
+        for (legend, (x, y)) in self {
+            let record = vec![
+                legend,
+                x.to_string(),
+                y.to_string(),
+            ];
+            wtr.write_record(&record).expect("Failed to write CSV record");
+        }
+
+        wtr.flush().expect("Failed to flush CSV writer");
+    }
 }
+
 
 impl<S, K, It> Rangeable for PlottableIterator<S, K, It>
 where

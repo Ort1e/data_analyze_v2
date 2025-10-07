@@ -17,7 +17,4 @@ pub trait Sample<Key> : Clone + Sized + Send + Sync
 
     /// Get the value of data (as string), associated to the given key
     fn get_string_value(&self, key : &Key) -> String;
-
-    
-
 }
